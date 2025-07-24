@@ -2,6 +2,8 @@
 
 import logging
 
+from src.modules.schema_validator.validator import SchemaValidator
+
 logger = logging.getLogger(__name__)
 
 class Aisert:
@@ -15,8 +17,8 @@ class Aisert:
 
     
     
-    def __init__(self, name):
-        self.name = name
+    def __init__(self, content):
+        self.content = content
         logger.setLevel(logging.DEBUG)
 
     def configure(self, config):
@@ -27,7 +29,8 @@ class Aisert:
     def assert_schema(self, schema):
         logger.debug(f"Asserting schema for {self.name}: {schema}")
         # Placeholder for schema assertion logic
-        return True
+        
+        return SchemaValidator.is_schema_match(self.content, schema)
     
     def assert_contains(self, item):
         logger.debug(f"Checking if {self.name} contains: {item}")
