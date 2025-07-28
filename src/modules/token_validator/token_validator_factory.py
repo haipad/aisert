@@ -4,7 +4,7 @@ import logging
 from src.modules.validator import BaseValidator
 
 
-class TokenValidator(BaseValidator):
+class TokenValidatorFactory(BaseValidator):
     """
     A class to count tokens in a given text.
     This is a placeholder implementation and should be replaced with actual logic.
@@ -32,7 +32,7 @@ class TokenValidator(BaseValidator):
         return len(self.encoding.encode(text))
 
     @staticmethod
-    def get_instance(encoding_model: str=None, encoding_name: str = None):
+    def get_instance(model_provider: str=None, encoding_name: str = None):
         """
         Get an instance of TokenValidator with specified encoding.
         
