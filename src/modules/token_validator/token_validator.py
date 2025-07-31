@@ -2,6 +2,7 @@ from typing import override
 
 from src.modules.token_validator.token_validator_base import TokenValidatorBase
 
+
 class TokenCountingError(Exception):
     """
     Custom exception for token counting errors.
@@ -9,11 +10,12 @@ class TokenCountingError(Exception):
         value -- the value that caused the error
         message -- explanation of the error
     """
+
     def __init__(self, value, message: str = "Token counting error occurred"):
         super().__init__(message)
         self.value = value
         self.message = message
-    
+
     def __str__(self):
         return f"{self.message}: {self.value}"
 
@@ -22,12 +24,29 @@ class OpenAITokenValidator(TokenValidatorBase):
     """
     A token counter for OpenAI models.
     """
-    def __init__(self, token_model: str=None, token_encoding: str=None):
+
+    _instances = {}
+
+    def __init__(self):
+        super().__init__(model_provider="openai")
+        self.token_model = None
+        self.token_encoding = None
+        self.encoding_client = None
+
+    @classmethod
+    def get_instance(cls, token_model: str = None, token_encoding: str = None):
+        instance = None
         if not token_encoding and not token_model:
             raise ValueError("Either token_encoding or token_model must be provided.")
-        super().__init__(model_provider="openai")
-        self.token_model = token_model
-        self.token_encoding = token_encoding
+
+        key = token_encoding or token_model
+        if key not in cls._instances:
+            instance = cls()
+            instance.token_model = token_model
+            instance.token_encoding = token_encoding
+            instance.encoding_client = instance._get_encoding()
+            cls._instances[key] = instance
+        return cls._instances[key]
 
     def _get_encoding(self):
         """
@@ -36,23 +55,28 @@ class OpenAITokenValidator(TokenValidatorBase):
         :return: The encoding object.
         """
         import tiktoken
+
         try:
             if self.token_encoding:
                 self.logger.info(f"Using token encoding: {self.token_encoding}")
                 try:
                     if self.token_encoding not in tiktoken.list_encodings():
-                        self.logger.error(f"Encoding {self.token_encoding} not found. Defaulting to best-for-model encoding.")
+                        self.logger.error(
+                            f"Encoding {self.token_encoding} not found. Defaulting to best-for-model encoding."
+                        )
                     else:
-                        self.encoding = tiktoken.get_encoding(self.token_encoding)
-                        return self.encoding
+                        return tiktoken.get_encoding(self.token_encoding)
                 except Exception as e:
-                    self.logger.error(f"Failed to get encoding for {self.token_encoding}: {e}")
+                    self.logger.error(
+                        f"Failed to get encoding for {self.token_encoding}: {e}"
+                    )
                     self.logger.info("Defaulting to best-for-model encoding.")
-            self.encoding = tiktoken.encoding_for_model(self.token_model)
+            return tiktoken.encoding_for_model(self.token_model)
         except Exception as e:
-            raise TokenCountingError(self.token_model, f"Failed to load tokenizer for model {self.token_model}: {e}")
-        return self.encoding
-    
+            raise TokenCountingError(
+                self.token_model, f"Failed to get tiktoken encoding_for_model: {e}"
+            )
+
     @override
     def count(self, text):
         """
@@ -61,79 +85,192 @@ class OpenAITokenValidator(TokenValidatorBase):
         :return: The number of tokens in the text.
         """
         try:
-            token_length = len(self._get_encoding().encode(text))
+            token_length = len(self.encoding_client.encode(text))
             self.logger.info(f"Token size is {token_length}.")
             return token_length
         except Exception as e:
-            raise TokenCountingError(self.token_model, f"Failed to count tokens for model {self.token_model}: {e}")
+            raise TokenCountingError(
+                self.token_model,
+                f"Failed to count tokens for model {self.token_model}: {e}",
+            )
 
 
 class HuggingFaceTokenValidator(TokenValidatorBase):
     """
     A token counter for Hugging Face models.
     """
-    def __init__(self, token_model: str=None):
+
+    _instances = {}
+
+    def __init__(self):
+        super().__init__(model_provider="huggingface")
+        self.token_model = None
+        self.encoding_client = None
+
+    @classmethod
+    def get_instance(cls, token_model: str = None):
+        """
+        Get an instance of HuggingFaceTokenValidator with the specified token model.
+        :param token_model: The model to use for token counting.
+        :return: An instance of HuggingFaceTokenValidator.
+        """
+        instance = None
+
         if not token_model:
             raise TokenCountingError("token_model must be provided.")
-        super().__init__(model_provider="huggingface")
-        self.token_model = token_model
-    
-    @override
-    def count(self, text):
+
+        if token_model not in cls._instances:
+            instance = cls()
+            instance.token_model = token_model
+            instance.encoding_client = instance._get_encoding()
+            cls._instances[token_model] = instance
+
+        return cls._instances[token_model]
+
+    def _get_encoding(self):
+        """
+        Returns the encoding for the specified token model.
+        :return: The encoding object.
+        """
         from transformers import AutoTokenizer
+
         try:
+            self.logger.info(f"Using token model: {self.token_model}")
             tokenizer = AutoTokenizer.from_pretrained(self.token_model)
-            token_length = len(tokenizer.encode(text))
+            return tokenizer
+        except Exception as e:
+            raise TokenCountingError(
+                self.token_model, f"Failed to get AutoTokenizer: {e}"
+            )
+
+    def count(self, text):
+        try:
+            token_length = len(self.encoding_client.encode(text))
             self.logger.info(f"Token size is {token_length}.")
         except Exception as e:
-            raise TokenCountingError(self.token_model, f"Failed to load tokenizer for model {self.token_model}: {e}")
+            raise TokenCountingError(
+                self.token_model,
+                f"Failed to load tokenizer for model {self.token_model}: {e}",
+            )
         return token_length
-    
 
 
 class AnthropicTokenValidator(TokenValidatorBase):
     """
     A token counter for Anthropic models.
     """
-    def __init__(self, token_model: str=None, api_key: str = None):
+
+    _instances = {}
+
+    def __init__(self):
+        super().__init__(model_provider="anthropic")
+        self.token_model = None
+        self.encoding_client = None
+
+    @classmethod
+    def get_instance(cls, token_model: str = None):
+        """
+        Get an instance of AnthropicTokenValidator with the specified token model.
+        :param token_model: The model to use for token counting.
+        :return: An instance of AnthropicTokenValidator.
+        """
+        instance = None
+
         if not token_model:
             raise TokenCountingError("token_model must be provided.")
-        super().__init__(model_provider="anthropic")
-        self.token_model = token_model
-        self.api_key = api_key
-    
-    @override
-    def count(self, text):
-        import anthropic
-        try:
-            client = anthropic.Client()
-            token_length = client.count_tokens(model=self.token_model, messages=text)
-            self.logger.info(f"Token size is {token_length}.")
-        except Exception as e:
-            raise TokenCountingError(self.token_model, f"Failed to count tokens for model {self.token_model}: {e}")
-        return token_length
-    
 
-    
+        if token_model not in cls._instances:
+            instance = cls()
+            instance.token_model = token_model
+            instance.encoding_client = instance._get_encoding()
+            cls._instances[token_model] = instance
+
+        return cls._instances[token_model]
+
+    def _get_encoding(self):
+        """
+        Returns the encoding for the specified token model.
+        :return: The encoding object.
+        """
+        import anthropic
+
+        try:
+            return anthropic.Client()
+        except Exception as e:
+            raise TokenCountingError(
+                self.token_model, f"Failed to get anthropic client: {e}"
+            )
+
+    def count(self, text: list[dict]):
+        """
+        Counts the number of tokens in the provided text.
+        :param text: The input text to count tokens from, expected to be a list of message dictionaries.
+        :return: The number of tokens in the text.
+        """
+
+        if not (
+            isinstance(text, list) and all(isinstance(item, dict) for item in text)
+        ):
+            raise TokenCountingError(
+                self.token_model, "Text must be a list of message dictionaries."
+            )
+        try:
+            token_length = self.encoding_client.count_tokens(
+                model=self.token_model, messages=text
+            )
+            self.logger.info(f"Token size is {token_length}.")
+            return token_length
+        except Exception as e:
+            raise TokenCountingError(
+                self.token_model,
+                f"Failed to count tokens for model {self.token_model}: {e}",
+            )
+
+
 class GoogleTokenValidator(TokenValidatorBase):
     """
     A token counter for Google models.
     """
-    def __init__(self, token_model: str=None):
+
+    _instances = {}
+
+    def __init__(self):
+        super().__init__(model_provider="google")
+        self.token_model = None
+        self.encoding_client = None
+
+    @classmethod
+    def get_instance(cls, token_model: str = None):
+        """
+        Get an instance of GoogleTokenValidator with the specified token model.
+        :param token_model: The model to use for token counting.
+        :return: An instance of GoogleTokenValidator.
+        """
+        instance = None
+
         if not token_model:
             raise TokenCountingError("token_model must be provided.")
-        super().__init__(model_provider="google")
-        self.token_model = token_model
+        if token_model not in cls._instances:
+            instance = cls()
+            instance.token_model = token_model
+            instance.encoding_client = instance._get_encoding()
+            cls._instances[token_model] = instance
+        return cls._instances[token_model]
 
-    @override
-    def get_encoding(self):
+    def _get_encoding(self):
         """
         Returns the encoding for the specified encoding name.
         :return: The encoding object.
         """
-        pass
-    
-    @override
+        try:
+            from google import genai
+
+            return genai.Client()
+        except Exception as e:
+            raise TokenCountingError(
+                self.token_model, f"Failed to get google genai client: {e}"
+            )
+
     def count(self, text):
         """
         Counts the number of tokens in the provided text.
@@ -141,10 +278,13 @@ class GoogleTokenValidator(TokenValidatorBase):
         :return: The number of tokens in the text.
         """
         try:
-            from google import genai
-            client = genai.Client()
-            count = client.count_tokens(text, model=self.token_model)
-            self.logger.info(f"Token size is {count}.")
-            return count
+            token_length = self.encoding_client.count_tokens(
+                text, model=self.token_model
+            )
+            self.logger.info(f"Token size is {token_length}.")
+            return token_length
         except Exception as e:
-            raise TokenCountingError(self.token_model, f"Failed to count tokens for model {self.token_model}: {e}")
+            raise TokenCountingError(
+                self.token_model,
+                f"Failed to count tokens for model {self.token_model}: {e}",
+            )
