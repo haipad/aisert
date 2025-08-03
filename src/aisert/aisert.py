@@ -3,8 +3,8 @@ from typing import List
 
 from src.config.config import AIsertConfig
 from src.modules.schema_validator import SchemaValidator
-from src.modules.semantic_match import SemanticMatch
-from src.modules.token_counter import TokenCounter
+from src.modules.semantic_validator import SemanticMatch
+from src.modules.token_validator.token_validator import TokenValidator
 
 
 class Aisert:
@@ -39,7 +39,7 @@ class Aisert:
             self.config = AIsertConfig.load_from_json(config)
         else:
             self.config = AIsertConfig.get_default_config()
-        self.token_counter = TokenCounter()
+        self.token_counter = TokenValidator()
         self.semantic_matcher = SemanticMatch()
 
     def assert_schema(self, schema):

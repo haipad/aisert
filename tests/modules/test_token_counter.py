@@ -1,6 +1,6 @@
 import pytest
 
-from src.modules.token_validator.token_validator_factory import TokenCounter
+from src.modules.token_validator.token_validator import TokenCounter
 
 def test_token_counter_count_tokens(monkeypatch):
     counter = TokenCounter()
