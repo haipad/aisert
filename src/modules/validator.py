@@ -10,7 +10,7 @@ class BaseValidator:
         self.status = False
         self.reason = ""
 
-    def validate(self):
+    def validate(self) -> dict:
         """Validate content against a schema."""
         raise NotImplementedError("Subclasses must implement this method.")
 

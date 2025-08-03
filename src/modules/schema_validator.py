@@ -10,9 +10,6 @@ class SchemaValidator(BaseValidator):
     """
 
     def __init__(self):
-        """
-        Initializes the SchemaValidator class.
-        """
         super().__init__()
 
     def validate(self, content: dict, schema):
@@ -47,4 +44,3 @@ class SchemaValidator(BaseValidator):
             self.reason = f"Unexpected error occurred during validation: {e}"
 
         return self.result
-

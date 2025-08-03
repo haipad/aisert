@@ -48,8 +48,8 @@ class SemanticValidator(BaseValidator):
             self.logger.error("Threshold must be between 0 and 1")
             raise ValueError("Threshold must be between 0 and 1")
     
-    @staticmethod
-    def get_instance(model_name='all-MiniLM-L6-v2'):
+    @classmethod
+    def get_instance(cls, model_name='all-MiniLM-L6-v2'):
         """
         Get an instance of SemanticValidator with specified model and threshold.
         
@@ -57,6 +57,6 @@ class SemanticValidator(BaseValidator):
         :param threshold: Threshold for semantic similarity.
         :return: An instance of SemanticValidator.
         """
-        if model_name not in SemanticValidator._instances:
-            SemanticValidator._instances[model_name] = SemanticValidator(model_name)
-        return SemanticValidator._instances[model_name]
+        if model_name not in cls._instances:
+            cls._instances[model_name] = cls(model_name)
+        return cls._instances[model_name]

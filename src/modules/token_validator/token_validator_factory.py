@@ -1,5 +1,4 @@
-from typing import override
-
+from typing import Dict, List
 from src.modules.token_validator.token_validator_base import TokenValidatorBase
 
 
@@ -77,7 +76,6 @@ class OpenAITokenValidator(TokenValidatorBase):
                 self.token_model, f"Failed to get tiktoken encoding_for_model: {e}"
             )
 
-    @override
     def count(self, text):
         """
         Counts the number of tokens in the provided text.
@@ -147,12 +145,12 @@ class HuggingFaceTokenValidator(TokenValidatorBase):
         try:
             token_length = len(self.encoding_client.encode(text))
             self.logger.info(f"Token size is {token_length}.")
+            return token_length
         except Exception as e:
             raise TokenCountingError(
                 self.token_model,
                 f"Failed to load tokenizer for model {self.token_model}: {e}",
             )
-        return token_length
 
 
 class AnthropicTokenValidator(TokenValidatorBase):
@@ -201,7 +199,7 @@ class AnthropicTokenValidator(TokenValidatorBase):
                 self.token_model, f"Failed to get anthropic client: {e}"
             )
 
-    def count(self, text: list[dict]):
+    def count(self, text: List[Dict]):
         """
         Counts the number of tokens in the provided text.
         :param text: The input text to count tokens from, expected to be a list of message dictionaries.
@@ -289,6 +287,7 @@ class GoogleTokenValidator(TokenValidatorBase):
                 f"Failed to count tokens for model {self.token_model}: {e}",
             )
 
+
 class TokenValidatorFactory:
     """
     Factory class for creating instances of token validators based on the model provider.
@@ -296,15 +295,16 @@ class TokenValidatorFactory:
     based on the model provider and token model.
     """
 
-    def get_instance(self, model_provider: str = None, token_model: str = None, 
-                     encoding_name: str = None):
+    @staticmethod
+    def get_instance(model_provider: str = None, token_model: str = None, 
+                     token_encoding: str = None):
         """
         Get an instance of TokenValidatorFactory with the specified token model.
         :param token_model: The model to use for token counting.
         :return: An instance of TokenValidatorFactory.
         """
         if not model_provider:
-            raise ValueError("token_model must be provided.")
+            raise ValueError("model_provider must be provided.")
         if model_provider == "anthropic":
             return AnthropicTokenValidator.get_instance(token_model=token_model)
         elif model_provider == "google":
@@ -312,6 +312,6 @@ class TokenValidatorFactory:
         elif model_provider == "huggingface":
             return HuggingFaceTokenValidator.get_instance(token_model=token_model)
         elif model_provider == "openai":
-            return OpenAITokenValidator.get_instance(token_model=token_model, encoding_name=encoding_name)
+            return OpenAITokenValidator.get_instance(token_model=token_model, token_encoding=token_encoding)
         else:
             raise ValueError(f"Unsupported model provider: {model_provider}")

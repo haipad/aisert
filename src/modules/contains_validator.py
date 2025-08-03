@@ -6,7 +6,7 @@ class ContainsValidator(BaseValidator):
     Validates if a text contains a specific substring.
     """
 
-    def __init__(self, substring: str):
+    def __init__(self):
         super().__init__()
 
     def validate(self, content, items: list) -> bool:

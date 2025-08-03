@@ -15,8 +15,8 @@ class AIsertConfig:
         self,
         token_encoding: str,
         token_model: str,
-        api_key: str = None,
         mode: str = "lite",
+        model_provider: str = None,
         sentence_transformer_model: str = "all-MiniLM-L6-v2",
     ):
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -29,8 +29,7 @@ class AIsertConfig:
         self.mode = mode
         self.token_encoding = token_encoding
         self.token_model = token_model
-        if self.mode == "lite":
-            sentence_transformer_model = None
+        self.model_provider = model_provider
         self.sentence_transformer_model = sentence_transformer_model
 
     @staticmethod
@@ -43,10 +42,11 @@ class AIsertConfig:
             token_encoding=None,
             token_model="openai",
             sentence_transformer_model="all-MiniLM-L6-v2",
+            model_provider="openai",
         )
 
     @staticmethod
-    def load_from_json(file_path):
+    def load(file_path):
         """
         Loads the configuration from a JSON file.
         :param file_path: Path to the JSON configuration file.
@@ -74,5 +74,6 @@ class AIsertConfig:
             f"AIsertConfig(mode={self.mode}, "
             f"token_encoding={self.token_encoding}, "
             f"token_model={self.token_model}, "
+            f"model_provider={self.model_provider}, "
             f"sentence_transformer_model={self.sentence_transformer_model})"
         )
