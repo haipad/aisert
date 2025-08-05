@@ -10,7 +10,7 @@ class SchemaValidator(BaseValidator):
     """
 
     def __init__(self):
-        super().__init__()
+        super().__init__("SchemaValidator")
 
     def validate(self, content: dict, schema):
         """

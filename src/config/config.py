@@ -15,18 +15,11 @@ class AIsertConfig:
         self,
         token_encoding: str,
         token_model: str,
-        mode: str = "lite",
         model_provider: str = None,
         sentence_transformer_model: str = "all-MiniLM-L6-v2",
     ):
         self.logger = logging.getLogger(self.__class__.__name__)
 
-        if mode not in self._MODE:
-            mode = self._MODE[0]
-            self.logger.error(
-                f"Invalid mode: {mode}. Next time choose from {self._MODE}. Defaulting to 'lite'."
-            )
-        self.mode = mode
         self.token_encoding = token_encoding
         self.token_model = token_model
         self.model_provider = model_provider
@@ -38,7 +31,6 @@ class AIsertConfig:
         Returns the default configuration for AIsert.
         """
         return AIsertConfig(
-            mode="lite",
             token_encoding=None,
             token_model="openai",
             sentence_transformer_model="all-MiniLM-L6-v2",
@@ -53,7 +45,10 @@ class AIsertConfig:
         :return: An instance of AIsertConfig with the loaded settings.
         """
         import json
+        import os
 
+        #Sanitize file path
+        file_path = os.path.abspath(file_path)
         try:
             with open(file_path, "r") as f:
                 try:

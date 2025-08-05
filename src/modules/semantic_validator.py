@@ -8,7 +8,7 @@ class SemanticValidator(BaseValidator):
     _instances ={}
 
     def __init__(self, model_name='all-MiniLM-L6-v2'):
-        super().__init__()
+        super().__init__("SemanticValidator")
         self.model = SentenceTransformer(model_name)
         self.threshold = 0.8  # Default threshold for semantic similarity
 

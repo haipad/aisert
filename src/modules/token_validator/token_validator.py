@@ -7,7 +7,7 @@ class TokenValidator(BaseValidator):
     Validates the number of tokens in a given text.
     """
     def __init__(self, model_provider: str = None):
-        super().__init__()
+        super().__init__("TokenValidator")
         self.model_provider = model_provider
 
 

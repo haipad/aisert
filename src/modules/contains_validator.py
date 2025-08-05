@@ -7,7 +7,7 @@ class ContainsValidator(BaseValidator):
     """
 
     def __init__(self):
-        super().__init__()
+        super().__init__("ContainsValidator")
 
     def validate(self, content, items: list) -> bool:
         """
@@ -20,13 +20,7 @@ class ContainsValidator(BaseValidator):
             self.status = False
             self.reason = "Items must be a list and not {}".format(type(items))
         else:
-            c = []
-            n = []
-            for item in items:
-                if item in content:
-                    c.append(item)
-                else:
-                    n.append(item)
+            n = [item for item in items if item not in content]
             self.status = len(n) == 0
             self.reason = f"Not Contains: {n or '[]'}"
         return self.result
