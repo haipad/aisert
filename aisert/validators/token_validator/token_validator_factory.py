@@ -1,22 +1,6 @@
 from typing import Dict, List
-from src.modules.token_validator.token_validator_base import TokenValidatorBase
-
-
-class TokenCountingError(Exception):
-    """
-    Custom exception for token counting errors.
-    Attributes:
-        value -- the value that caused the error
-        message -- explanation of the error
-    """
-
-    def __init__(self, value, message: str = "Token counting error occurred"):
-        super().__init__(message)
-        self.value = value
-        self.message = message
-
-    def __str__(self):
-        return f"{self.message}: {self.value}"
+from .token_validator_base import TokenValidatorBase
+from ...exception import TokenCountingError
 
 
 class OpenAITokenValidator(TokenValidatorBase):

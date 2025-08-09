@@ -1,6 +1,6 @@
 import pytest
 
-from src.modules.semantic_validator import SemanticMatch
+from aisert.validators.semantic_validator import SemanticMatch
 
 def test_semantic_match_compare_equal(monkeypatch):
     matcher = SemanticMatch()

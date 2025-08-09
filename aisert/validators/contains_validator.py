@@ -1,4 +1,4 @@
-from src.modules.validator import BaseValidator
+from .validator import BaseValidator
 
 
 class ContainsValidator(BaseValidator):

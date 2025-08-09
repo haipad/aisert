@@ -1,6 +1,6 @@
 import pytest
 
-from src.modules.schema_validator import SchemaValidator
+from aisert.validators.schema_validator import SchemaValidator
 
 def test_schema_validator_is_schema_match_valid(monkeypatch):
     # Simulate a valid schema match

@@ -2,7 +2,7 @@
 
 from typing import Dict
 
-from src.models.validator_enums import ValidatorEnums
+from ..models.validator_enums import ValidatorEnums
 
 
 class Result:
@@ -50,7 +50,7 @@ class AisertStatus:
         :param status: The status of the validator (True or False).
         :param reason: The reason for the validator's status.
         """
-        if validator in ValidatorEnums.members:
+        if validator in ValidatorEnums.members():
             self.validators[validator] = result
 
     def collect(self) -> Dict[str, Result]:

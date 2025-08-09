@@ -1,23 +1,30 @@
 import logging
 
+from aisert.config.defaults import DefaultConfig
+
 
 class AIsertConfig:
     """
     Configuration class for AIsert.
     This class holds the configuration settings for the AIsert application.
     """
-
-    _MODE = ["lite", "full"]
-
     logger = logging.getLogger("AIsertConfig")
 
     def __init__(
         self,
-        token_encoding: str,
+        model_provider,
         token_model: str,
-        model_provider: str = None,
+        token_encoding: str = None,
         sentence_transformer_model: str = "all-MiniLM-L6-v2",
     ):
+        """
+        Initializes the AIsertConfig with the provided parameters.
+        :param token_encoding: The encoding type for tokens (applicable only for openAI models).
+        :param token_model: The model used for tokenization.
+        :param model_provider: The provider of the LLM model being used.
+        :param sentence_transformer_model: The sentence transformer model used for semantic validation.
+        """
+        self.mode = "default"
         self.logger = logging.getLogger(self.__class__.__name__)
 
         self.token_encoding = token_encoding
@@ -30,15 +37,11 @@ class AIsertConfig:
         """
         Returns the default configuration for AIsert.
         """
-        return AIsertConfig(
-            token_encoding=None,
-            token_model="openai",
-            sentence_transformer_model="all-MiniLM-L6-v2",
-            model_provider="openai",
-        )
+        default_config = DefaultConfig.to_dict()
+        return AIsertConfig(**default_config)
 
     @staticmethod
-    def load(file_path):
+    def load(file_path: str) -> "AIsertConfig":
         """
         Loads the configuration from a JSON file.
         :param file_path: Path to the JSON configuration file.
@@ -57,17 +60,18 @@ class AIsertConfig:
                     AIsertConfig.logger.error(
                         f"Error decoding JSON from {file_path}: {e}"
                     )
+                    AIsertConfig.logger.info("Using default configuration.")
                     return AIsertConfig.get_default_config()
         except FileNotFoundError:
             AIsertConfig.logger.error(f"Configuration file {file_path} not found.")
+            AIsertConfig.logger.info(f"Using default configuration.")
             return AIsertConfig.get_default_config()
         return AIsertConfig(**config_data)
 
 
     def __repr__(self):
         return (
-            f"AIsertConfig(mode={self.mode}, "
-            f"token_encoding={self.token_encoding}, "
+            f"AIsertConfig(token_encoding={self.token_encoding}, "
             f"token_model={self.token_model}, "
             f"model_provider={self.model_provider}, "
             f"sentence_transformer_model={self.sentence_transformer_model})"

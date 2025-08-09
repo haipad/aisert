@@ -10,10 +10,9 @@ class ValidatorEnums(Enum):
     TOKENS = "TokenValidator"
     SEMANTIC = "SemanticValidator"
 
-    @staticmethod
-    @property
-    def members():
+    @classmethod
+    def members(cls):
         """
         Returns a list of all validator types.
         """
-        return [member.value for member in ValidatorEnums]
+        return [member.value for member in cls]

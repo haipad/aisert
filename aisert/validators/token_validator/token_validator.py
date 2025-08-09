@@ -1,5 +1,6 @@
-from src.modules.token_validator.token_validator_factory import TokenCountingError, TokenValidatorFactory
-from src.modules.validator import BaseValidator
+from .token_validator_factory import TokenValidatorFactory
+from ...exception import TokenCountingError
+from ..validator import BaseValidator
 
 
 class TokenValidator(BaseValidator):
@@ -23,7 +24,7 @@ class TokenValidator(BaseValidator):
             token_validator = TokenValidatorFactory.get_instance(
                 model_provider=self.model_provider,
                 token_model=token_model,
-                encoding_name=token_encoding
+                token_encoding=token_encoding
             )
             token_count = token_validator.count(text)
             self.logger.debug(f"Token count: {token_count}")

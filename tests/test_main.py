@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock, patch
 
-from src.aisert.aisert import Aisert
+from aisert.aisert import Aisert
 
 @pytest.fixture
 def sample_content():

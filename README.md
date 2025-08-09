@@ -1,9 +1,10 @@
-# aisert
+# Aisert
 
 
 ## Points to Note - For development
 1. Entry class is aisert/aisert.py
 2. The aisert module uses fluid interface design pattern (it looks beautiful in usage)
+3. Added basic_usage.py under example that actually works (haven't tested the semantic match yet) - 08/09/2025
 
 ## Pending tasks
 https://www.notion.so/AIsert-launch-246dee8985e480a99658c4ae299ca5ff?source=copy_link

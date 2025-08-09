@@ -1,6 +1,8 @@
 from sentence_transformers import SentenceTransformer
 
-from src.modules.validator import BaseValidator
+from ..models.result import Result
+
+from .validator import BaseValidator
 
 
 class SemanticValidator(BaseValidator):
@@ -13,7 +15,7 @@ class SemanticValidator(BaseValidator):
         self.threshold = 0.8  # Default threshold for semantic similarity
 
 
-    def validate(self, text1: str, text2: str) -> bool:
+    def validate(self, text1: str, text2: str) -> Result:
         """
         Compare two texts for semantic similarity.
         

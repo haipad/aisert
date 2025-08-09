@@ -1,12 +1,11 @@
-
-
-from src.modules.validator import BaseValidator
+import logging
 
 
 class TokenValidatorBase:
 
     def __init__(self, model_provider: str = None):
         super().__init__()
+        self.logger = logging.getLogger(self.__class__.__name__)
         self.model_provider = model_provider
     
     def get_model_provider(self):

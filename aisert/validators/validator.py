@@ -1,7 +1,6 @@
-from collections import defaultdict
 import logging
 
-from src.models.result import Result
+from ..models.result import Result
 
 
 class BaseValidator:

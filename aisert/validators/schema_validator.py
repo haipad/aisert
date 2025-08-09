@@ -1,7 +1,6 @@
-import logging
 from pydantic import BaseModel, ValidationError
 
-from src.modules.validator import BaseValidator
+from .validator import BaseValidator
 
 
 class SchemaValidator(BaseValidator):
