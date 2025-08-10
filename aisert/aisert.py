@@ -1,6 +1,8 @@
 import logging
 from typing import List, Optional
 
+from .models.report import AisertReport
+
 from .exception import AisertError
 
 from .config.config import AIsertConfig
@@ -100,14 +102,14 @@ class Aisert:
         self.logger.debug(f"Token validation result: {result.status} - {pu.sanitize_text(result.reason)}")
         return self
 
-    def assert_semantic_matches(self, other, strict: bool = True):
+    def assert_semantic_matches(self, other, threshold: float = 0.8, strict: bool = True):
         """
         Asserts that the semantic content of this instance matches other text.
         :param other: Other text to compare against.
         :param strict: If True, raises AisertError on validation failure.
         :return: The result of the semantic validation.
         """
-        self.semantic_validator = SemanticValidator(model_name=self.config.sentence_transformer_model)
+        self.semantic_validator = SemanticValidator(model_name=self.config.sentence_transformer_model, threshold=threshold)
         self.logger.debug(f"Checking semantic match")
         result = self.semantic_validator.validate(self.content, other)
         self.status.update(self.semantic_validator.name, result)
@@ -127,4 +129,4 @@ class Aisert:
         }
         for k, v in self.status.collect().items():
             results["rules"][k] = v.to_dict()
-        return results
+        return AisertReport(**results)

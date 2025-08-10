@@ -15,7 +15,7 @@ class AIsertConfig:
         model_provider,
         token_model: str,
         token_encoding: str = None,
-        sentence_transformer_model: str = "all-MiniLM-L6-v2",
+        sentence_transformer_model: str = "all-MiniLM-L6-v1",
     ):
         """
         Initializes the AIsertConfig with the provided parameters.

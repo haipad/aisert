@@ -1,4 +1,6 @@
+import logging
 import sys
+import time
 import os
 
 # Add parent directory to path to import aisert
@@ -6,7 +8,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from aisert import Aisert, AIsertConfig
 
-def assert_openai_response():
+logger=logging.getLogger("BasicUsageExample")
+
+def assert_openai_mcok_response():
     """
     Example of how to use Aisert to validate a LLM response.
     """
@@ -19,50 +23,54 @@ def assert_openai_response():
         token_model="gpt-3.5-turbo",
         token_encoding=None,
         model_provider="openai",
-        sentence_transformer_model="all-MiniLM-L6-v2",
     )
     
     # Validate the response
     result = Aisert(content=mock_response, config=config) \
-        .assert_contains(items=["Paris", "France"]) \
-        .assert_tokens(40) \
+        .assert_contains(items=["Paris", "France"], strict=False) \
+        .assert_tokens(40, strict=False) \
+        .assert_semantic_matches("France's capital", 0.75, strict=False) \
         .collect()
     
-    print("Validation result:", result)
+    print("Validation result:", str(result))
     return result
 
 
-def assert_openai_response_with_api():
+def assert_openai_response():
     """
     Example of how to use Aisert to validate a LLM response.
     """
     from openai import OpenAI
 
+    logger.info("Start of LLM request")
+    # Get OpenAI response
+    client = OpenAI() # OPENAI_API_KEY should be present as environment variable
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": "About France in 50 words"}]
+    )
+    logger.info("End of LLM request")
+
+    # AIsert validation
+    logger.info("Start of Aisert validation")
     # Configure Aisert
     config = AIsertConfig(
         token_model="gpt-3.5-turbo",
         token_encoding=None,
         model_provider="openai",
-        sentence_transformer_model="all-MiniLM-L6-v2",
+        sentence_transformer_model="paraphrase-MiniLM-L3-v2",
     )
-
-    # Get OpenAI response
-    client = OpenAI() # OPENAI_API_KEY should be present in environment variables
-    response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[{"role": "user", "content": "What is the capital of France?"}]
-    )
-
-    # Validate the response
     result = Aisert(content=response.choices[0].message.content, config=config) \
-        .assert_contains(items=["Paris", "France"]) \
-        .assert_tokens(40) \
-        .assert_semantic_matches("France's capital") \
+        .assert_contains(items=["Paris", "France"], strict=False) \
+        .assert_tokens(40, strict=False) \
+        .assert_semantic_matches("France's capital", 0.75, strict=False) \
         .collect()
     
-    print("Validation result:", result)
+    logger.info("Validation result:", str(result))
     return result
 
 if __name__ == "__main__":
-    assert_openai_response_with_api()
-    print("Aisert validation completed successfully.")
+    start_time = time.time()
+    assert_openai_mcok_response()
+    end_time = time.time()
+    print(f"Execution time: {end_time - start_time} seconds")
