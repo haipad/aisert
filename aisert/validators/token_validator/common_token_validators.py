@@ -10,11 +10,10 @@ class OpenAITokenValidator(TokenValidatorBase):
 
     _instances = {}
 
-    def __init__(self):
+    def __init__(self, token_model, token_encoding):
         super().__init__(model_provider="openai")
-        self.token_model = None
-        self.token_encoding = None
-        self.encoding_client = None
+        self.token_model = token_model
+        self.token_encoding = token_encoding
 
     @classmethod
     def get_instance(cls, token_model: str = None, token_encoding: str = None):
@@ -24,17 +23,12 @@ class OpenAITokenValidator(TokenValidatorBase):
 
         key = token_encoding or token_model
         if key not in cls._instances:
-            instance = cls()
-            instance.token_model = token_model
-            instance.token_encoding = token_encoding
-            instance.encoding_client = instance._get_encoding()
-            cls._instances[key] = instance
+            cls._instances[key] = cls(token_model, token_encoding)
         return cls._instances[key]
 
     def _get_encoding(self):
         """
         Returns the encoding for the specified encoding name.
-        :param encoding_name: The name of the encoding to retrieve.
         :return: The encoding object.
         """
         import tiktoken
@@ -67,7 +61,7 @@ class OpenAITokenValidator(TokenValidatorBase):
         :return: The number of tokens in the text.
         """
         try:
-            token_length = len(self.encoding_client.encode(text))
+            token_length = len(self._get_encoding().encode(text))
             self.logger.info(f"Token size is {token_length}.")
             return token_length
         except Exception as e:
@@ -84,10 +78,9 @@ class HuggingFaceTokenValidator(TokenValidatorBase):
 
     _instances = {}
 
-    def __init__(self):
+    def __init__(self, token_model):
         super().__init__(model_provider="huggingface")
-        self.token_model = None
-        self.encoding_client = None
+        self.token_model = token_model
 
     @classmethod
     def get_instance(cls, token_model: str = None):
@@ -96,16 +89,11 @@ class HuggingFaceTokenValidator(TokenValidatorBase):
         :param token_model: The model to use for token counting.
         :return: An instance of HuggingFaceTokenValidator.
         """
-        instance = None
-
         if not token_model:
             raise TokenCountingError("token_model must be provided.")
 
         if token_model not in cls._instances:
-            instance = cls()
-            instance.token_model = token_model
-            instance.encoding_client = instance._get_encoding()
-            cls._instances[token_model] = instance
+            cls._instances[token_model] = cls(token_model)
 
         return cls._instances[token_model]
 
@@ -127,7 +115,7 @@ class HuggingFaceTokenValidator(TokenValidatorBase):
 
     def count(self, text):
         try:
-            token_length = len(self.encoding_client.encode(text))
+            token_length = len(self._get_encoding().encode(text))
             self.logger.info(f"Token size is {token_length}.")
             return token_length
         except Exception as e:
@@ -144,10 +132,9 @@ class AnthropicTokenValidator(TokenValidatorBase):
 
     _instances = {}
 
-    def __init__(self):
+    def __init__(self, token_model):
         super().__init__(model_provider="anthropic")
-        self.token_model = None
-        self.encoding_client = None
+        self.token_model = token_model
 
     @classmethod
     def get_instance(cls, token_model: str = None):
@@ -156,16 +143,11 @@ class AnthropicTokenValidator(TokenValidatorBase):
         :param token_model: The model to use for token counting.
         :return: An instance of AnthropicTokenValidator.
         """
-        instance = None
-
         if not token_model:
             raise TokenCountingError("token_model must be provided.")
 
         if token_model not in cls._instances:
-            instance = cls()
-            instance.token_model = token_model
-            instance.encoding_client = instance._get_encoding()
-            cls._instances[token_model] = instance
+            cls._instances[token_model] = cls(token_model)
 
         return cls._instances[token_model]
 
@@ -191,13 +173,13 @@ class AnthropicTokenValidator(TokenValidatorBase):
         """
 
         if not (
-            isinstance(text, list) and all(isinstance(item, dict) for item in text)
+                isinstance(text, list) and all(isinstance(item, dict) for item in text)
         ):
             raise TokenCountingError(
                 self.token_model, "Text must be a list of message dictionaries."
             )
         try:
-            token_length = self.encoding_client.count_tokens(
+            token_length = self._get_encoding().count_tokens(
                 model=self.token_model, messages=text
             )
             self.logger.info(f"Token size is {token_length}.")
@@ -216,10 +198,9 @@ class GoogleTokenValidator(TokenValidatorBase):
 
     _instances = {}
 
-    def __init__(self):
+    def __init__(self, token_model):
         super().__init__(model_provider="google")
-        self.token_model = None
-        self.encoding_client = None
+        self.token_model = token_model
 
     @classmethod
     def get_instance(cls, token_model: str = None):
@@ -228,15 +209,10 @@ class GoogleTokenValidator(TokenValidatorBase):
         :param token_model: The model to use for token counting.
         :return: An instance of GoogleTokenValidator.
         """
-        instance = None
-
         if not token_model:
             raise TokenCountingError("token_model must be provided.")
         if token_model not in cls._instances:
-            instance = cls()
-            instance.token_model = token_model
-            instance.encoding_client = instance._get_encoding()
-            cls._instances[token_model] = instance
+            cls._instances[token_model] = cls(token_model)
         return cls._instances[token_model]
 
     def _get_encoding(self):
@@ -260,7 +236,7 @@ class GoogleTokenValidator(TokenValidatorBase):
         :return: The number of tokens in the text.
         """
         try:
-            token_length = self.encoding_client.count_tokens(
+            token_length = self._get_encoding().count_tokens(
                 text, model=self.token_model
             )
             self.logger.info(f"Token size is {token_length}.")
