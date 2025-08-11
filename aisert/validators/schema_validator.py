@@ -1,6 +1,8 @@
-from pydantic import BaseModel, ValidationError
+from typing import Any
+from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from .validator import BaseValidator
+from ..models.result import Result
 
 
 class SchemaValidator(BaseValidator):
@@ -11,7 +13,7 @@ class SchemaValidator(BaseValidator):
     def __init__(self):
         super().__init__("SchemaValidator")
 
-    def validate(self, content: dict, schema):
+    def validate(self, content: Any, schema: Any):
         """
         Validates if the content matches the schema.
 
@@ -20,26 +22,11 @@ class SchemaValidator(BaseValidator):
         :return: Result true/false with reason.
         """
         self.logger.debug(f"Validating content against schema: {schema}")
-
-        if not isinstance(schema, type):
-            self.status = False
-            self.reason = "Provided schema is not a class"
-            return self.result
-
-        if not issubclass(schema, BaseModel):
-            self.status = False
-            self.reason = "Provided schema is not a Pydantic model"
-            return self.result
-
-        try:
-            schema(**content)
-            self.status = True
-            self.reason = "Content matches schema"
-        except ValidationError as e:
-            self.status = False
-            self.reason = f"Content does not match schema {e}"
-        except Exception as e:
-            self.status = False
-            self.reason = f"Unexpected error occurred during validation: {e}"
-
-        return self.result
+        
+        if (isinstance(schema, type) and issubclass(schema, BaseModel)) or (hasattr(schema, "__origin__")):
+            try:
+                TypeAdapter(schema).validate_python(content)
+                return Result(True, "")
+            except ValidationError as e:
+                return Result(False, str(e))
+        return Result(False, "Provided schema is not a valid Pydantic model")

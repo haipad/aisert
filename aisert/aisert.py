@@ -22,11 +22,6 @@ class Aisert:
     as needed.
     """
 
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    )
-
     def __init__(self, content: str, config: Optional[AIsertConfig] = None):
         """
         Initializes the Aisert instance with the provided content.
@@ -35,22 +30,7 @@ class Aisert:
         self.logger = logging.getLogger(self.__class__.__name__)
         self.content = content
         self.status = AisertStatus()
-        self._configure(config)
-    
-    def _configure(self, config):
-        """
-        Configures the Aisert instance with the provided configuration.
-        :param config: Configuration for Aisert, can be an AIsertConfig instance, a dictionary, or a path to a configuration file.
-        """
-
-        self.logger.debug(f"Configuring Aisert with config: {pu.sanitize_text(type(config).__name__)}")
-        
-        if isinstance(config, AIsertConfig):
-            self.config = config
-        elif type(config) is str:
-            self.config = AIsertConfig.load(config)
-        else:
-            self.config = AIsertConfig.get_default_config()     
+        self.config = config 
 
     def assert_schema(self, schema, strict: bool = True):
         """
@@ -109,9 +89,9 @@ class Aisert:
         :param strict: If True, raises AisertError on validation failure.
         :return: The result of the semantic validation.
         """
-        self.semantic_validator = SemanticValidator(model_name=self.config.sentence_transformer_model, threshold=threshold)
+        self.semantic_validator = SemanticValidator.get_instance(model_name=self.config.sentence_transformer_model)
         self.logger.debug(f"Checking semantic match")
-        result = self.semantic_validator.validate(self.content, other)
+        result = self.semantic_validator.validate(self.content, other, threshold)
         self.status.update(self.semantic_validator.name, result)
         if strict and not result.status:
             raise AisertError(f"{result.reason}")
