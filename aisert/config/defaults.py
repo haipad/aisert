@@ -5,8 +5,8 @@ from typing import Dict
 
 class DefaultConfig:
     """
-    Default configuration for AIsert.
-    This class holds the default settings for the AIsert application.
+    Default configuration for Aserti.i
+    This class holds the default settings for the Asert application.
     """
 
     # Default values for the configuration

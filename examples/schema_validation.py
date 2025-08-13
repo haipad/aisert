@@ -10,7 +10,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 logger = logging.getLogger("SchemaValidationExample")
 
-from aisert import Aisert, AIsertConfig
+from aisert import Aisert, AisertConfig
 
 
 # Response model containing id, name, address, age, and email

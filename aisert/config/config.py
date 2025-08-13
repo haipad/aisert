@@ -3,12 +3,12 @@ import logging
 from aisert.config.defaults import DefaultConfig
 
 
-class AIsertConfig:
+class AisertConfig:
     """
-    Configuration class for AIsert.
-    This class holds the configuration settings for the AIsert application.
+    Configuration class for Aisert.
+    This class holds the configuration settings for the Aisert application.
     """
-    logger = logging.getLogger("AIsertConfig")
+    logger = logging.getLogger("AisertConfig")
 
     def __init__(
         self,
@@ -18,7 +18,7 @@ class AIsertConfig:
         sentence_transformer_model: str = "all-MiniLM-L6-v1",
     ):
         """
-        Initializes the AIsertConfig with the provided parameters.
+        Initializes the AisertConfig with the provided parameters.
         :param token_encoding: The encoding type for tokens (applicable only for openAI models).
         :param token_model: The model used for tokenization.
         :param model_provider: The provider of the LLM model being used.
@@ -35,17 +35,17 @@ class AIsertConfig:
     @staticmethod
     def get_default_config():
         """
-        Returns the default configuration for AIsert.
+        Returns the default configuration for Aisert.
         """
         default_config = DefaultConfig.to_dict()
-        return AIsertConfig(**default_config)
+        return AisertConfig(**default_config)
 
     @staticmethod
-    def load(file_path: str) -> "AIsertConfig":
+    def load(file_path: str) -> "AisertConfig":
         """
         Loads the configuration from a JSON file.
         :param file_path: Path to the JSON configuration file.
-        :return: An instance of AIsertConfig with the loaded settings.
+        :return: An instance of AisertConfig with the loaded settings.
         """
         import json
         import os
@@ -57,21 +57,21 @@ class AIsertConfig:
                 try:
                     config_data = json.load(f)
                 except json.JSONDecodeError as e:
-                    AIsertConfig.logger.error(
+                    AisertConfig.logger.error(
                         f"Error decoding JSON from {file_path}: {e}"
                     )
-                    AIsertConfig.logger.info("Using default configuration.")
-                    return AIsertConfig.get_default_config()
+                    AisertConfig.logger.info("Using default configuration.")
+                    return AisertConfig.get_default_config()
         except FileNotFoundError:
-            AIsertConfig.logger.error(f"Configuration file {file_path} not found.")
-            AIsertConfig.logger.info(f"Using default configuration.")
-            return AIsertConfig.get_default_config()
-        return AIsertConfig(**config_data)
+            AisertConfig.logger.error(f"Configuration file {file_path} not found.")
+            AisertConfig.logger.info(f"Using default configuration.")
+            return AisertConfig.get_default_config()
+        return AisertConfig(**config_data)
 
 
     def __repr__(self):
         return (
-            f"AIsertConfig(token_encoding={self.token_encoding}, "
+            f"AisertConfig(token_encoding={self.token_encoding}, "
             f"token_model={self.token_model}, "
             f"model_provider={self.model_provider}, "
             f"sentence_transformer_model={self.sentence_transformer_model})"

@@ -1,4 +1,3 @@
-
 class TokenCountingError(Exception):
     """
     Custom exception for token counting errors.
@@ -7,21 +6,16 @@ class TokenCountingError(Exception):
         message -- explanation of the error
     """
 
-    def __init__(self, value, message: str = "Token counting error occurred"):
+    def __init__(self, value="", message="Token counting error"):
         super().__init__(message)
         self.value = value
-        self.message = message
 
     def __str__(self):
-        return f"{self.message}: {self.value}"
+        return f"{self.args[0]}: {self.value}"
+
 
 class AisertError(Exception):
-    """
-    Base exception class for Aisert.
-    """
-    def __init__(self, message: str):
-        super().__init__(message)
-        self.message = message
+    """Base exception class for Aisert."""
 
     def __str__(self):
-        return f"AisertException: {self.message}"
+        return f"AisertError: {self.args[0]}"

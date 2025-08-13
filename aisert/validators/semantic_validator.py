@@ -1,10 +1,12 @@
-from ..models.result import Result
+import threading
 
+from ..models.result import Result
 from .validator import BaseValidator
 
 
 class SemanticValidator(BaseValidator):
     _instances = {}
+    _lock = threading.RLock()
 
     def __init__(self, model_name):
         from sentence_transformers import SentenceTransformer  # lazy import
@@ -45,10 +47,11 @@ class SemanticValidator(BaseValidator):
         :param model_name: Name of the sentence transformer model.
         :return: An instance of SemanticValidator.
         """
-        if model_name not in cls._instances:
-            print(f"Creating new instance of SemanticValidator for model {model_name}")
-            cls._instances[model_name] = cls(model_name)
-        return cls._instances[model_name]
+        with cls._lock:
+            if model_name not in cls._instances:
+                print(f"Creating new instance of SemanticValidator for model {model_name}")
+                cls._instances[model_name] = cls(model_name)
+            return cls._instances[model_name]
 
     def clear_cache(self, model_instance: int = 3):
         """

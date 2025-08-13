@@ -1,14 +1,17 @@
+from functools import cached_property
 from typing import Dict, List
 from .token_validator_base import TokenValidatorBase
 from ...exception import TokenCountingError
+
+import threading
 
 
 class OpenAITokenValidator(TokenValidatorBase):
     """
     A token counter for OpenAI models.
     """
-
     _instances = {}
+    _lock = threading.RLock()
 
     def __init__(self, token_model, token_encoding):
         super().__init__(model_provider="openai")
@@ -17,16 +20,17 @@ class OpenAITokenValidator(TokenValidatorBase):
 
     @classmethod
     def get_instance(cls, token_model: str = None, token_encoding: str = None):
-        instance = None
         if not token_encoding and not token_model:
-            raise ValueError("Either token_encoding or token_model must be provided.")
+            raise TokenCountingError("Either token_encoding or token_model must be provided.")
 
         key = token_encoding or token_model
-        if key not in cls._instances:
-            cls._instances[key] = cls(token_model, token_encoding)
-        return cls._instances[key]
+        with cls._lock:
+            if key not in cls._instances:
+                cls._instances[key] = cls(token_model, token_encoding)
+            return cls._instances[key]
 
-    def _get_encoding(self):
+    @cached_property
+    def encoding_client(self):
         """
         Returns the encoding for the specified encoding name.
         :return: The encoding object.
@@ -38,20 +42,19 @@ class OpenAITokenValidator(TokenValidatorBase):
                 self.logger.info(f"Using token encoding: {self.token_encoding}")
                 try:
                     if self.token_encoding not in tiktoken.list_encodings():
-                        self.logger.error(
-                            f"Encoding {self.token_encoding} not found. Defaulting to best-for-model encoding."
+                        raise TokenCountingError(
+                            f"Encoding {self.token_encoding} not found in tiktoken."
                         )
                     else:
                         return tiktoken.get_encoding(self.token_encoding)
                 except Exception as e:
-                    self.logger.error(
+                    raise TokenCountingError(
                         f"Failed to get encoding for {self.token_encoding}: {e}"
                     )
-                    self.logger.info("Defaulting to best-for-model encoding.")
             return tiktoken.encoding_for_model(self.token_model)
         except Exception as e:
             raise TokenCountingError(
-                self.token_model, f"Failed to get tiktoken encoding_for_model: {e}"
+                f"Failed to get tiktoken encoding_for_model: {e}"
             )
 
     def count(self, text):
@@ -61,12 +64,11 @@ class OpenAITokenValidator(TokenValidatorBase):
         :return: The number of tokens in the text.
         """
         try:
-            token_length = len(self._get_encoding().encode(text))
+            token_length = len(self.encoding_client.encode(text))
             self.logger.info(f"Token size is {token_length}.")
             return token_length
         except Exception as e:
             raise TokenCountingError(
-                self.token_model,
                 f"Failed to count tokens for model {self.token_model}: {e}",
             )
 
@@ -77,6 +79,7 @@ class HuggingFaceTokenValidator(TokenValidatorBase):
     """
 
     _instances = {}
+    _lock = threading.RLock()
 
     def __init__(self, token_model):
         super().__init__(model_provider="huggingface")
@@ -90,14 +93,15 @@ class HuggingFaceTokenValidator(TokenValidatorBase):
         :return: An instance of HuggingFaceTokenValidator.
         """
         if not token_model:
-            raise TokenCountingError("token_model must be provided.")
+            raise TokenCountingError("parameter token_model must be provided.")
 
-        if token_model not in cls._instances:
-            cls._instances[token_model] = cls(token_model)
+        with cls._lock:
+            if token_model not in cls._instances:
+                cls._instances[token_model] = cls(token_model)
+            return cls._instances[token_model]
 
-        return cls._instances[token_model]
-
-    def _get_encoding(self):
+    @cached_property
+    def encoding_client(self):
         """
         Returns the encoding for the specified token model.
         :return: The encoding object.
@@ -110,17 +114,16 @@ class HuggingFaceTokenValidator(TokenValidatorBase):
             return tokenizer
         except Exception as e:
             raise TokenCountingError(
-                self.token_model, f"Failed to get AutoTokenizer: {e}"
+                f"Failed to get AutoTokenizer: {e}"
             )
 
     def count(self, text):
         try:
-            token_length = len(self._get_encoding().encode(text))
+            token_length = len(self.encoding_client.encode(text))
             self.logger.info(f"Token size is {token_length}.")
             return token_length
         except Exception as e:
             raise TokenCountingError(
-                self.token_model,
                 f"Failed to load tokenizer for model {self.token_model}: {e}",
             )
 
@@ -131,6 +134,7 @@ class AnthropicTokenValidator(TokenValidatorBase):
     """
 
     _instances = {}
+    _lock = threading.RLock()
 
     def __init__(self, token_model):
         super().__init__(model_provider="anthropic")
@@ -146,12 +150,13 @@ class AnthropicTokenValidator(TokenValidatorBase):
         if not token_model:
             raise TokenCountingError("token_model must be provided.")
 
-        if token_model not in cls._instances:
-            cls._instances[token_model] = cls(token_model)
+        with cls._lock:
+            if token_model not in cls._instances:
+                cls._instances[token_model] = cls(token_model)
+            return cls._instances[token_model]
 
-        return cls._instances[token_model]
-
-    def _get_encoding(self):
+    @cached_property
+    def encoding_client(self):
         """
         Returns the encoding for the specified token model.
         :return: The encoding object.
@@ -162,7 +167,7 @@ class AnthropicTokenValidator(TokenValidatorBase):
             return anthropic.Client()
         except Exception as e:
             raise TokenCountingError(
-                self.token_model, f"Failed to get anthropic client: {e}"
+                f"Failed to get anthropic client: {e}"
             )
 
     def count(self, text: List[Dict]):
@@ -176,17 +181,16 @@ class AnthropicTokenValidator(TokenValidatorBase):
                 isinstance(text, list) and all(isinstance(item, dict) for item in text)
         ):
             raise TokenCountingError(
-                self.token_model, "Text must be a list of message dictionaries."
+                "Text must be a list of message dictionaries."
             )
         try:
-            token_length = self._get_encoding().count_tokens(
+            token_length = self.encoding_client.count_tokens(
                 model=self.token_model, messages=text
             )
             self.logger.info(f"Token size is {token_length}.")
             return token_length
         except Exception as e:
             raise TokenCountingError(
-                self.token_model,
                 f"Failed to count tokens for model {self.token_model}: {e}",
             )
 
@@ -197,6 +201,7 @@ class GoogleTokenValidator(TokenValidatorBase):
     """
 
     _instances = {}
+    _lock = threading.RLock()
 
     def __init__(self, token_model):
         super().__init__(model_provider="google")
@@ -211,11 +216,14 @@ class GoogleTokenValidator(TokenValidatorBase):
         """
         if not token_model:
             raise TokenCountingError("token_model must be provided.")
-        if token_model not in cls._instances:
-            cls._instances[token_model] = cls(token_model)
-        return cls._instances[token_model]
 
-    def _get_encoding(self):
+        with cls._lock:
+            if token_model not in cls._instances:
+                cls._instances[token_model] = cls(token_model)
+            return cls._instances[token_model]
+
+    @cached_property
+    def encoding_client(self):
         """
         Returns the encoding for the specified encoding name.
         :return: The encoding object.
@@ -226,7 +234,7 @@ class GoogleTokenValidator(TokenValidatorBase):
             return genai.Client()
         except Exception as e:
             raise TokenCountingError(
-                self.token_model, f"Failed to get google genai client: {e}"
+                f"Failed to get google genai client: {e}"
             )
 
     def count(self, text):
@@ -236,13 +244,12 @@ class GoogleTokenValidator(TokenValidatorBase):
         :return: The number of tokens in the text.
         """
         try:
-            token_length = self._get_encoding().count_tokens(
+            token_length = self.encoding_client.count_tokens(
                 text, model=self.token_model
             )
             self.logger.info(f"Token size is {token_length}.")
             return token_length
         except Exception as e:
             raise TokenCountingError(
-                self.token_model,
                 f"Failed to count tokens for model {self.token_model}: {e}",
             )

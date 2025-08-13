@@ -6,7 +6,7 @@ import os
 # Add parent directory to path to import aisert
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from aisert import Aisert, AIsertConfig
+from aisert import Aisert, AisertConfig
 
 logger = logging.getLogger("BasicUsageExample")
 
@@ -20,7 +20,7 @@ def assert_openai_mcok_response():
     mock_response = "Paris is the capital of France."
 
     # Configure Aisert
-    config = AIsertConfig(
+    config = AisertConfig(
         token_model="gpt-3.5-turbo",
         token_encoding=None,
         model_provider="openai",
@@ -53,10 +53,10 @@ def assert_openai_response():
     )
     logger.info("End of LLM request")
 
-    # AIsert validation
+    # Aisert validation
     logger.info("Start of Aisert validation")
     # Configure Aisert
-    config = AIsertConfig(
+    config = AisertConfig(
         token_model="gpt-3.5-turbo",
         token_encoding=None,
         model_provider="openai",

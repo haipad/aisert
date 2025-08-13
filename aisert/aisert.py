@@ -5,7 +5,7 @@ from .models.report import AisertReport
 
 from .exception import AisertError
 
-from .config.config import AIsertConfig
+from .config.config import AisertConfig
 from .models.result import AisertStatus
 from .validators.contains_validator import ContainsValidator
 from .validators.schema_validator import SchemaValidator
@@ -22,7 +22,7 @@ class Aisert:
     as needed.
     """
 
-    def __init__(self, content: str, config: Optional[AIsertConfig] = None):
+    def __init__(self, content: str, config: Optional[AisertConfig] = None):
         """
         Initializes the Aisert instance with the provided content.
         :param content: The content to be validated. Expected to be a LLM response string.

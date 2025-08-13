@@ -7,7 +7,7 @@ class TokenValidatorBase:
         super().__init__()
         self.logger = logging.getLogger(self.__class__.__name__)
         self.model_provider = model_provider
-    
+
     def get_model_provider(self):
         """
         Returns the model provider for the token validator.
@@ -15,7 +15,7 @@ class TokenValidatorBase:
         :return: The model provider string.
         """
         return self.model_provider
-    
+
     def _get_encoding(self):
         """
         Returns the encoding client for the specified encoding name.
@@ -30,7 +30,7 @@ class TokenValidatorBase:
         This method should be overridden in subclasses to return the appropriate instance.
         """
         raise NotImplementedError("Subclasses must implement the get_instance method.")
-    
+
     def count(self, text: str) -> int:
         """
         Not implemented error.
