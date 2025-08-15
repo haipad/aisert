@@ -1,21 +1,23 @@
-class TokenCountingError(Exception):
-    """
-    Custom exception for token counting errors.
-    Attributes:
-        value -- the value that caused the error
-        message -- explanation of the error
-    """
-
-    def __init__(self, value="", message="Token counting error"):
-        super().__init__(message)
-        self.value = value
-
-    def __str__(self):
-        return f"{self.args[0]}: {self.value}"
-
-
 class AisertError(Exception):
-    """Base exception class for Aisert."""
+    """Base exception for all Aisert errors."""
+    pass
 
-    def __str__(self):
-        return f"AisertError: {self.args[0]}"
+
+class TokenValidationError(AisertError):
+    """Token counting specific errors."""
+    pass
+
+
+class SchemaValidationError(AisertError):
+    """Schema validation specific errors."""
+    pass
+
+
+class SemanticValidationError(AisertError):
+    """Semantic validation specific errors."""
+    pass
+
+
+class ContainsValidationError(AisertError):
+    """Text contain validation errors"""
+    pass

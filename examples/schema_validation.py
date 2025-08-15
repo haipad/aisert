@@ -6,6 +6,8 @@ import logging
 import os
 import sys
 
+from sympy import false
+
 # Add parent directory to path to import aisert
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 logger = logging.getLogger("SchemaValidationExample")

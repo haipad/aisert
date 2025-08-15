@@ -1,5 +1,6 @@
 import threading
 
+from ..exception import SemanticValidationError
 from ..models.result import Result
 from .validator import BaseValidator
 
@@ -26,10 +27,10 @@ class SemanticValidator(BaseValidator):
         from sentence_transformers import util  # lazy import
 
         if not (0 <= threshold <= 1):
-            return Result(False, "Threshold must be between 0 and 1")
+            raise SemanticValidationError("Threshold must be between 0 and 1")
 
         if type(text1) is not str or type(text2) is not str:
-            return Result(False, "Both inputs must be strings not {} and {}".format(
+            raise SemanticValidationError("Both inputs must be strings not {} and {}".format(
                 type(text1), type(text2)
             ))
         else:
@@ -49,7 +50,6 @@ class SemanticValidator(BaseValidator):
         """
         with cls._lock:
             if model_name not in cls._instances:
-                print(f"Creating new instance of SemanticValidator for model {model_name}")
                 cls._instances[model_name] = cls(model_name)
             return cls._instances[model_name]
 

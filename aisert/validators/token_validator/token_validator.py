@@ -1,5 +1,5 @@
 from .token_validator_factory import TokenValidatorFactory
-from ...exception import TokenCountingError
+from ...exception import TokenValidationError
 from ..validator import BaseValidator
 from ...models.result import Result
 
@@ -31,10 +31,11 @@ class TokenValidator(BaseValidator):
             self.logger.debug(f"Token count: {token_count}")
 
             if token_count > token_limit:
-                return Result(False, f"Token limit exceeded: {token_count} tokens found, limit is {token_limit}")
+                raise TokenValidationError(f"Token limit exceeded: {token_count} tokens found, limit is {token_limit}")
             else:
                 return Result(True, f"Token count {token_count} is within limit {token_limit}")
 
-        except (TokenCountingError, Exception) as e:
-            self.logger.error(f"Error counting tokens: {e}")
-            return Result(False, str(e))
+        except TokenValidationError as e:
+            raise
+        except Exception as e:
+            raise TokenValidationError(f"Unexpected error: {e}")

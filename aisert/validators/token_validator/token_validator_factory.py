@@ -1,5 +1,6 @@
 from .common_token_validators import AnthropicTokenValidator, GoogleTokenValidator, HuggingFaceTokenValidator, \
     OpenAITokenValidator
+from ...exception import TokenValidationError
 
 
 class TokenValidatorFactory:
@@ -32,10 +33,10 @@ class TokenValidatorFactory:
         :return: An instance of TokenValidatorFactory.
         """
         if not model_provider:
-            raise ValueError("model_provider must be provided.")
+            raise TokenValidationError("model_provider must be provided.")
 
         if model_provider in TokenValidatorFactory._token_validators:
             token_validator_cls = TokenValidatorFactory._token_validators[model_provider]
             return token_validator_cls.get_instance(**kwargs)
         else:
-            raise ValueError(f"Unsupported model provider: {model_provider}")
+            raise TokenValidationError(f"Unsupported model provider: {model_provider}")

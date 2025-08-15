@@ -6,7 +6,7 @@ from .models.report import AisertReport
 from .exception import AisertError
 
 from .config.config import AisertConfig
-from .models.result import AisertStatus
+from .models.result import AisertStatus, Result
 from .validators.contains_validator import ContainsValidator
 from .validators.schema_validator import SchemaValidator
 from .validators.semantic_validator import SemanticValidator
@@ -39,13 +39,8 @@ class Aisert:
         :param strict: If True, raises AisertError on validation failure.
         :return: The result of the schema validation.
         """
-        self.schema_validator = SchemaValidator()
-        self.logger.debug(f"Checking if content is matching {pu.sanitize_text(schema)}")
-        result = self.schema_validator.validate(self.content, schema)
-        self.status.update(self.schema_validator.name, result)
-        if strict and not result.status:
-            raise AisertError(f"{result.reason}")
-        self.logger.debug(f"Schema validation result: {result.status} - {pu.sanitize_text(result.reason)}")
+        self.logger.debug(f"Checking if content is matching {schema}")
+        self._validate(SchemaValidator(), strict,self.content, schema)
         return self
 
     def assert_contains(self, items: List[str], strict: bool = True):
@@ -55,13 +50,8 @@ class Aisert:
         :param strict: If True, raises AisertError on validation failure.
         :return: The result of the containment validation.
         """
-        self.contains_validator = ContainsValidator()
-        self.logger.debug(f"Checking if content contains {pu.sanitize_text(items)}")
-        result = self.contains_validator.validate(self.content, items)
-        self.status.update(self.contains_validator.name, result)
-        if strict and not result.status:
-            raise AisertError(f"{result.reason}")
-        self.logger.debug(f"Contains validation result: {result.status} - {pu.sanitize_text(result.reason)}")
+        self.logger.debug(f"Checking if content contains {items}")
+        self._validate(ContainsValidator(), strict, self.content, items)
         return self
 
     def assert_tokens(self, size:int, strict: bool = True):
@@ -71,15 +61,10 @@ class Aisert:
         :param strict: If True, raises AisertError on validation failure.
         :return: The result of the token validation.
         """
-        self.token_validator = TokenValidator(model_provider=self.config.model_provider)
-        self.logger.debug(f"Checking if tokens less than: {pu.sanitize_text(size)}")
-        result = self.token_validator.validate(
-            self.content, token_limit=size, token_model=self.config.token_model, token_encoding=self.config.token_encoding
+        self.logger.debug(f"Checking if tokens less than: {size}")
+        self._validate(TokenValidator(model_provider=self.config.model_provider), strict,
+                       self.content, token_limit=size, token_model=self.config.token_model, token_encoding=self.config.token_encoding
         )
-        self.status.update(self.token_validator.name, result)
-        if strict and not result.status:
-            raise AisertError(f"{result.reason}")
-        self.logger.debug(f"Token validation result: {result.status} - {pu.sanitize_text(result.reason)}")
         return self
 
     def assert_semantic_matches(self, other, threshold: float = 0.8, strict: bool = True):
@@ -89,14 +74,29 @@ class Aisert:
         :param strict: If True, raises AisertError on validation failure.
         :return: The result of the semantic validation.
         """
-        self.semantic_validator = SemanticValidator.get_instance(model_name=self.config.sentence_transformer_model)
         self.logger.debug(f"Checking semantic match")
-        result = self.semantic_validator.validate(self.content, other, threshold)
-        self.status.update(self.semantic_validator.name, result)
-        if strict and not result.status:
-            raise AisertError(f"{result.reason}")
-        self.logger.debug(f"Semantic validation result: {result.status} - {pu.sanitize_text(result.reason)}")
+        self._validate(SemanticValidator.get_instance(model_name=self.config.sentence_transformer_model),
+                       strict, self.content, other, threshold)
         return self
+
+    def _validate(self, validator, strict, *args, **kwargs):
+        """
+        Calls the validate method of validator and updates result.
+        :param validator: The validator instance.
+        :param args: Positional arguments for the validator.
+        :param kwargs: Keyword arguments for the validator.
+        """
+        try:
+            result = validator.validate(*args, **kwargs)
+            self.logger.debug(f"{validator.name} validation result: {result.status}")
+        except AisertError as e:
+            if strict:
+                self.logger.error(f"{validator.name} validation failed")
+                raise
+            else:
+                self.logger.error(f"{validator.name} validation failed: {str(e)}")
+                result = Result(status=False, reason=str(e))
+        self.status.update(validator.name, result)
 
     def collect(self):
         """

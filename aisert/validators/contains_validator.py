@@ -1,7 +1,7 @@
 from typing import List
 
-from aisert.models.result import Result
 from .validator import BaseValidator
+from ..exception import ContainsValidationError
 from ..models.result import Result
 
 
@@ -22,6 +22,6 @@ class ContainsValidator(BaseValidator):
         :return: True if the content contains the substring, False otherwise.
         """
         if not isinstance(items, list):
-            return Result(False, f"items must be a list")
+            raise ContainsValidationError(False, f"items must be a list")
         missing = [item for item in items if item not in content]
-        return Result(len(missing)==0, f"Missing: {missing or '[None]'}")
+        return Result(len(missing) == 0, f"Missing: {missing or '[None]'}")

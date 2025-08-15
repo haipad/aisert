@@ -1,7 +1,7 @@
 from functools import cached_property
 from typing import Dict, List
 from .token_validator_base import TokenValidatorBase
-from ...exception import TokenCountingError
+from ...exception import TokenValidationError
 
 import threading
 
@@ -21,7 +21,7 @@ class OpenAITokenValidator(TokenValidatorBase):
     @classmethod
     def get_instance(cls, token_model: str = None, token_encoding: str = None):
         if not token_encoding and not token_model:
-            raise TokenCountingError("Either token_encoding or token_model must be provided.")
+            raise TokenValidationError("Either token_encoding or token_model must be provided.")
 
         key = token_encoding or token_model
         with cls._lock:
@@ -42,18 +42,18 @@ class OpenAITokenValidator(TokenValidatorBase):
                 self.logger.info(f"Using token encoding: {self.token_encoding}")
                 try:
                     if self.token_encoding not in tiktoken.list_encodings():
-                        raise TokenCountingError(
+                        raise TokenValidationError(
                             f"Encoding {self.token_encoding} not found in tiktoken."
                         )
                     else:
                         return tiktoken.get_encoding(self.token_encoding)
                 except Exception as e:
-                    raise TokenCountingError(
+                    raise TokenValidationError(
                         f"Failed to get encoding for {self.token_encoding}: {e}"
                     )
             return tiktoken.encoding_for_model(self.token_model)
         except Exception as e:
-            raise TokenCountingError(
+            raise TokenValidationError(
                 f"Failed to get tiktoken encoding_for_model: {e}"
             )
 
@@ -68,7 +68,7 @@ class OpenAITokenValidator(TokenValidatorBase):
             self.logger.info(f"Token size is {token_length}.")
             return token_length
         except Exception as e:
-            raise TokenCountingError(
+            raise TokenValidationError(
                 f"Failed to count tokens for model {self.token_model}: {e}",
             )
 
@@ -93,7 +93,7 @@ class HuggingFaceTokenValidator(TokenValidatorBase):
         :return: An instance of HuggingFaceTokenValidator.
         """
         if not token_model:
-            raise TokenCountingError("parameter token_model must be provided.")
+            raise TokenValidationError("parameter token_model must be provided.")
 
         with cls._lock:
             if token_model not in cls._instances:
@@ -113,7 +113,7 @@ class HuggingFaceTokenValidator(TokenValidatorBase):
             tokenizer = AutoTokenizer.from_pretrained(self.token_model)
             return tokenizer
         except Exception as e:
-            raise TokenCountingError(
+            raise TokenValidationError(
                 f"Failed to get AutoTokenizer: {e}"
             )
 
@@ -123,7 +123,7 @@ class HuggingFaceTokenValidator(TokenValidatorBase):
             self.logger.info(f"Token size is {token_length}.")
             return token_length
         except Exception as e:
-            raise TokenCountingError(
+            raise TokenValidationError(
                 f"Failed to load tokenizer for model {self.token_model}: {e}",
             )
 
@@ -148,7 +148,7 @@ class AnthropicTokenValidator(TokenValidatorBase):
         :return: An instance of AnthropicTokenValidator.
         """
         if not token_model:
-            raise TokenCountingError("token_model must be provided.")
+            raise TokenValidationError("token_model must be provided.")
 
         with cls._lock:
             if token_model not in cls._instances:
@@ -166,7 +166,7 @@ class AnthropicTokenValidator(TokenValidatorBase):
         try:
             return anthropic.Client()
         except Exception as e:
-            raise TokenCountingError(
+            raise TokenValidationError(
                 f"Failed to get anthropic client: {e}"
             )
 
@@ -183,7 +183,7 @@ class AnthropicTokenValidator(TokenValidatorBase):
             self.logger.info(f"Token size is {token_length}.")
             return token_length
         except Exception as e:
-            raise TokenCountingError(
+            raise TokenValidationError(
                 f"Failed to count tokens for model {self.token_model}: {e}",
             )
 
@@ -208,7 +208,7 @@ class GoogleTokenValidator(TokenValidatorBase):
         :return: An instance of GoogleTokenValidator.
         """
         if not token_model:
-            raise TokenCountingError("token_model must be provided.")
+            raise TokenValidationError("token_model must be provided.")
 
         with cls._lock:
             if token_model not in cls._instances:
@@ -226,7 +226,7 @@ class GoogleTokenValidator(TokenValidatorBase):
 
             return genai.Client()
         except Exception as e:
-            raise TokenCountingError(
+            raise TokenValidationError(
                 f"Failed to get google genai client: {e}"
             )
 
@@ -243,6 +243,6 @@ class GoogleTokenValidator(TokenValidatorBase):
             self.logger.info(f"Token size is {token_length}.")
             return token_length
         except Exception as e:
-            raise TokenCountingError(
+            raise TokenValidationError(
                 f"Failed to count tokens for model {self.token_model}: {e}",
             )
