@@ -4,5 +4,5 @@ from .exception import AisertError
 from .models.report import AisertReport
 from .validators.token_validator.token_validator_base import TokenValidatorBase
 
-__version__ = "0.1.0"
+__version__ = "0.0.1"
 __all__ = ["Aisert", "AisertConfig", "AisertError", "AisertReport", "TokenValidatorBase"]

@@ -30,7 +30,7 @@ class Aisert:
         self.logger = logging.getLogger(self.__class__.__name__)
         self.content = content
         self.status = AisertStatus()
-        self.config = config 
+        self.config = config or AisertConfig.get_default_config()
 
     def assert_schema(self, schema, strict: bool = True):
         """

@@ -11,7 +11,7 @@ from aisert import Aisert, AisertConfig
 logger = logging.getLogger("BasicUsageExample")
 
 
-def assert_openai_mcok_response():
+def assert_openai_mock_response():
     """
     Example of how to use Aisert to validate a LLM response.
     """
@@ -73,5 +73,5 @@ def assert_openai_response():
 
 
 if __name__ == "__main__":
-    assert_openai_mcok_response()
+    assert_openai_mock_response()
     assert_openai_response()

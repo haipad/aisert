@@ -25,7 +25,7 @@ class SemanticValidator(BaseValidator):
         """
         from sentence_transformers import util  # lazy import
 
-        if 1<= threshold <=0:
+        if not (0 <= threshold <= 1):
             return Result(False, "Threshold must be between 0 and 1")
 
         if type(text1) is not str or type(text2) is not str:

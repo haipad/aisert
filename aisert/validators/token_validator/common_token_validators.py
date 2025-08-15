@@ -170,19 +170,12 @@ class AnthropicTokenValidator(TokenValidatorBase):
                 f"Failed to get anthropic client: {e}"
             )
 
-    def count(self, text: List[Dict]):
+    def count(self, text):
         """
         Counts the number of tokens in the provided text.
-        :param text: The input text to count tokens from, expected to be a list of message dictionaries.
+        :param text: The input text to count tokens from.
         :return: The number of tokens in the text.
         """
-
-        if not (
-                isinstance(text, list) and all(isinstance(item, dict) for item in text)
-        ):
-            raise TokenCountingError(
-                "Text must be a list of message dictionaries."
-            )
         try:
             token_length = self.encoding_client.count_tokens(
                 model=self.token_model, messages=text
