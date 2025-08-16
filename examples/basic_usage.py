@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from aisert import Aisert, AisertConfig
 
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger("BasicUsageExample")
@@ -43,7 +43,7 @@ def assert_openai_mock_response():
 
 def assert_openai_response():
     """
-    Example of how to use Aisert to validate a LLM response.
+    Example of how to use Aisert with OpenAI response.
     """
     from openai import OpenAI
 
@@ -74,7 +74,36 @@ def assert_openai_response():
 
     logger.info(f"Validation result: {str(result)}")
 
+def assert_genai_response():
+    """
+    Example of how to use Aisert with Google-GenAI response
+    """
+    from google import genai
+
+    config = AisertConfig(
+        token_model="gemini-2.5-flash",
+        model_provider="google",
+    )
+
+    # Initialize the API client (you may need to set your API key as an environment variable)
+    client = genai.Client()
+
+    # Send a request to the Gemini model
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents="How does AI work? in 20 words.",
+    ).text
+
+    result = (
+        Aisert(content=response, config=config)
+        .assert_contains(items=["AI", "intelligence"], strict=False)
+        .assert_tokens(40, strict=False)
+        .assert_semantic_matches("AI's capabilities", 0.75, strict=False)
+        .collect()
+    )
+    logger.info(f"Validation result: {str(result)}")
 
 if __name__ == "__main__":
     assert_openai_mock_response()
     assert_openai_response()
+    assert_genai_response()

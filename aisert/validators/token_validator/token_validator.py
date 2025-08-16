@@ -1,3 +1,6 @@
+"""Token validation module for counting and validating token limits in text content."""
+import json
+
 from .token_validator_factory import TokenValidatorFactory
 from ...exception import TokenValidationError
 from ..validator import BaseValidator
@@ -13,10 +16,16 @@ class TokenValidator(BaseValidator):
         super().__init__("TokenValidator")
         self.model_provider = model_provider
 
-    def validate(self, text, token_limit: int = 100, token_model: str = None, token_encoding: str = None):
+    def validate(self, text,
+                 token_limit: int = 100,
+                 token_model: str = None,
+                 token_encoding: str = None
+                 ):
         """
         Validates the number of tokens in the text.
         
+        :param token_limit: max allowed token limit
+        :param text: text to be counted as tokens
         :param token_model: The model to use for token counting.
         :param token_encoding: The encoding to use for token counting.
         :return: The number of tokens in the text.
@@ -27,15 +36,18 @@ class TokenValidator(BaseValidator):
                 token_model=token_model,
                 token_encoding=token_encoding
             )
+            if not isinstance(text, str):
+                text = json.dumps(text)
+
             token_count = token_validator.count(text)
             self.logger.debug(f"Token count: {token_count}")
 
             if token_count > token_limit:
-                raise TokenValidationError(f"Token limit exceeded: {token_count} tokens found, limit is {token_limit}")
-            else:
-                return Result(True, f"Token count {token_count} is within limit {token_limit}")
+                raise TokenValidationError(
+                    f"Token limit exceeded: {token_count} tokens found, limit is {token_limit}")
+            return Result(True, f"Token count {token_count} is within limit {token_limit}")
 
-        except TokenValidationError as e:
+        except TokenValidationError:
             raise
         except Exception as e:
-            raise TokenValidationError(f"Unexpected error: {e}")
+            raise TokenValidationError(f"Unexpected error: {e}") from e

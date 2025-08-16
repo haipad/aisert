@@ -13,15 +13,23 @@ dependencies = [
 authors = [
   { name="haipad", email="hariprayush@gmail.com" },
 ]
-description = "An assertion library for Python that provides a simple and powerful way to write assertions for AI response in your code."
+description = "Validate AI responses with confidence! Fluent, chainable API for comprehensive AI output validation."
 readme = "README.md"
 requires-python = ">=3.9"
 classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Testing",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Operating System :: OS Independent",
 ]
-license = "MIT"
-license-files = ["LICEN[CS]E*"]
+license = {text = "MIT"}
 
 [project.urls]
 Homepage = "https://github.com/haipad/aisert"
@@ -30,5 +38,3 @@ Issues = "https://github.com/haipad/aisert/issues"
 [build-system]
 requires = ["setuptools >= 77.0.3"]
 build-backend = "setuptools.build_meta"
-
-[library-dependencies]

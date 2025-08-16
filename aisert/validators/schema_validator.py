@@ -25,7 +25,7 @@ class SchemaValidator(BaseValidator):
         :return: Result true/false with reason.
         """
         self.logger.debug(f"Validating content against schema: {schema}")
-
+        self.logger.debug(f"content: {content}")
         try:
             if type(content) is str:
                 content = json.loads(content)
@@ -34,6 +34,7 @@ class SchemaValidator(BaseValidator):
 
         is_pydantic_model = isinstance(schema, type) and issubclass(schema, BaseModel)
         is_generic_type = hasattr(schema, "__origin__")
+
         if not (is_pydantic_model or is_generic_type):
             raise SchemaValidationError("Provided schema is not a valid Pydantic model")
         try:
