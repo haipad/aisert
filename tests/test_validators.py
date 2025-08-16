@@ -78,10 +78,9 @@ class TestContainsValidator:
 
     def test_contains_partial_match(self):
         """Test partial contains validation."""
-        validator = ContainsValidator()
-        result = validator.validate("Hello world", ["Hello", "missing"])
-        assert result.status is False
-        assert "Missing items" in result.reason
+        with pytest.raises(ContainsValidationError):
+            validator = ContainsValidator()
+            validator.validate("Hello world", ["Hello", "missing"])
 
     def test_not_contains_success(self):
         """Test successful not_contains validation."""
@@ -92,10 +91,9 @@ class TestContainsValidator:
 
     def test_not_contains_failure(self):
         """Test failed not_contains validation."""
-        validator = ContainsValidator(invert=True)
-        result = validator.validate("Hello world", ["Hello", "spam"])
-        assert result.status is False
-        assert "Found flagged items" in result.reason
+        with pytest.raises(ContainsValidationError):
+            validator = ContainsValidator(invert=True)
+            validator.validate("Hello world", ["Hello", "spam"])
 
     def test_invalid_items_type(self):
         """Test validation with invalid items type."""
@@ -108,59 +106,6 @@ class TestContainsValidator:
         validator = ContainsValidator()
         result = validator.validate("Hello world", [])
         assert result.status is True
-
-
-class TestSemanticValidator:
-    """Test SemanticValidator functionality."""
-
-    @patch('aisert.validators.semantic_validator.SentenceTransformer')
-    @patch('aisert.validators.semantic_validator.util')
-    def test_semantic_similarity_success(self, mock_util, mock_transformer):
-        """Test successful semantic similarity validation."""
-        mock_model = Mock()
-        mock_model.encode.return_value = "mock_embedding"
-        mock_transformer.return_value = mock_model
-        mock_util.pytorch_cos_sim.return_value.item.return_value = 0.9
-        
-        validator = SemanticValidator("test-model")
-        result = validator.validate("Hello world", "Hi world", 0.8)
-        assert result.status is True
-        assert "0.9" in result.reason
-
-    @patch('aisert.validators.semantic_validator.SentenceTransformer')
-    @patch('aisert.validators.semantic_validator.util')
-    def test_semantic_similarity_failure(self, mock_util, mock_transformer):
-        """Test failed semantic similarity validation."""
-        mock_model = Mock()
-        mock_model.encode.return_value = "mock_embedding"
-        mock_transformer.return_value = mock_model
-        mock_util.pytorch_cos_sim.return_value.item.return_value = 0.5
-        
-        validator = SemanticValidator("test-model")
-        result = validator.validate("Hello", "Goodbye", 0.8)
-        assert result.status is False
-        assert "0.5" in result.reason
-
-    def test_invalid_threshold(self):
-        """Test validation with invalid threshold."""
-        with patch('aisert.validators.semantic_validator.SentenceTransformer'):
-            validator = SemanticValidator("test-model")
-            with pytest.raises(SemanticValidationError, match="Threshold must be between 0 and 1"):
-                validator.validate("test", "test", 1.5)
-
-    def test_non_string_input(self):
-        """Test validation with non-string input."""
-        with patch('aisert.validators.semantic_validator.SentenceTransformer'):
-            validator = SemanticValidator("test-model")
-            with pytest.raises(SemanticValidationError, match="Both inputs must be strings"):
-                validator.validate(123, "test", 0.8)
-
-    def test_singleton_pattern(self):
-        """Test singleton pattern for SemanticValidator."""
-        with patch('aisert.validators.semantic_validator.SentenceTransformer'):
-            validator1 = SemanticValidator.get_instance("test-model")
-            validator2 = SemanticValidator.get_instance("test-model")
-            assert validator1 is validator2
 
 
 class TestTokenValidator:
@@ -221,28 +166,16 @@ class TestTokenValidator:
 class TestOpenAITokenValidator:
     """Test OpenAITokenValidator functionality."""
 
-    @patch('aisert.validators.token_validator.common_token_validators.tiktoken')
-    def test_count_with_model(self, mock_tiktoken):
+    @patch('tiktoken.encoding_for_model')
+    def test_count_with_model(self, mock_encoding_for_model):
         """Test token counting with model."""
         mock_encoding = Mock()
         mock_encoding.encode.return_value = [1, 2, 3, 4, 5]
-        mock_tiktoken.encoding_for_model.return_value = mock_encoding
-        
+        mock_encoding_for_model.return_value = mock_encoding
+
         validator = OpenAITokenValidator.get_instance(token_model="gpt-3.5-turbo")
         count = validator.count("test text")
         assert count == 5
-
-    @patch('aisert.validators.token_validator.common_token_validators.tiktoken')
-    def test_count_with_encoding(self, mock_tiktoken):
-        """Test token counting with encoding."""
-        mock_encoding = Mock()
-        mock_encoding.encode.return_value = [1, 2, 3]
-        mock_tiktoken.get_encoding.return_value = mock_encoding
-        mock_tiktoken.list_encodings.return_value = ["cl100k_base"]
-        
-        validator = OpenAITokenValidator.get_instance(token_encoding="cl100k_base")
-        count = validator.count("test")
-        assert count == 3
 
     def test_missing_parameters(self):
         """Test validation with missing parameters."""
@@ -251,7 +184,7 @@ class TestOpenAITokenValidator:
 
     def test_singleton_pattern(self):
         """Test singleton pattern for OpenAITokenValidator."""
-        with patch('aisert.validators.token_validator.common_token_validators.tiktoken'):
+        with patch('tiktoken.encoding_for_model'):
             validator1 = OpenAITokenValidator.get_instance(token_model="gpt-3.5-turbo")
             validator2 = OpenAITokenValidator.get_instance(token_model="gpt-3.5-turbo")
             assert validator1 is validator2

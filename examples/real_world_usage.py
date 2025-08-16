@@ -135,26 +135,46 @@ def batch_validation():
         except Exception as e:
             print(f"Response {i+1}: ❌ Error - {e}")
 
+# Example 8: Hugging Face tokenization
+def hf_token_validation():
+    """Validates input and output tokens"""
+    prompt = "What is AI?"
+    mocked_response = "AI is artificial intelligence."
+
+    config = AisertConfig(
+        token_model="Qwen/Qwen3-1.7B-FP8",
+        model_provider="huggingface",
+    )
+
+    pre_validation = Aisert(prompt, config).assert_tokens(10).collect()
+    post_validation = Aisert(mocked_response, config).assert_tokens(50).collect()
+
+    print(f"Prompt validation: {pre_validation}")
+    print(f"Response validation: {post_validation}")
+
 if __name__ == "__main__":
     print("=== Real-World Aisert Usage Examples ===\n")
     
     print("1. API Response Validation:")
     validate_api_response()
-    
+
     print("\n2. Content Moderation:")
     content_moderation()
-    
+
     print("\n3. Educational Content:")
     validate_educational_content()
-    
+
     print("\n4. Chatbot Response:")
     validate_chatbot_response()
-    
+
     print("\n5. Code Generation:")
     validate_generated_code()
-    
+
     print("\n6. Translation Validation:")
     validate_translation()
-    
+
     print("\n7. Batch Processing:")
     batch_validation()
+
+    print("\n8. Hugging Face Token Validation")
+    hf_token_validation()

@@ -82,7 +82,7 @@ def assert_genai_response():
 
     config = AisertConfig(
         token_model="gemini-2.5-flash",
-        model_provider="google",
+        model_provider="anthropic",
     )
 
     # Initialize the API client (you may need to set your API key as an environment variable)

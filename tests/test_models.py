@@ -26,7 +26,7 @@ class TestResult:
     def test_result_str_representation(self):
         """Test Result string representation."""
         result = Result(True, "Test reason")
-        str_repr = str(result)
+        str_repr = str(result.to_dict())
         assert "True" in str_repr
         assert "Test reason" in str_repr
 
@@ -37,17 +37,16 @@ class TestAisertStatus:
     def test_aisert_status_creation(self):
         """Test AisertStatus initialization."""
         status = AisertStatus()
-        assert isinstance(status.results, dict)
-        assert len(status.results) == 0
+        assert isinstance(status.validators, dict)
 
     def test_update_status(self):
         """Test updating status with validator results."""
         status = AisertStatus()
         result = Result(True, "Success")
         
-        status.update("TestValidator", result)
-        assert "TestValidator" in status.results
-        assert status.results["TestValidator"] == result
+        status.update("ContainsValidator", result)
+        assert "ContainsValidator" in status.validators
+        assert status.validators["ContainsValidator"] == result
 
     def test_collect_results(self):
         """Test collecting all results."""
@@ -55,13 +54,13 @@ class TestAisertStatus:
         result1 = Result(True, "Success 1")
         result2 = Result(False, "Error 2")
         
-        status.update("Validator1", result1)
-        status.update("Validator2", result2)
+        status.update("ContainsValidator", result1)
+        status.update("TokenValidator", result2)
         
         collected = status.collect()
         assert len(collected) == 2
-        assert collected["Validator1"] == result1
-        assert collected["Validator2"] == result2
+        assert collected["ContainsValidator"] == result1
+        assert collected["TokenValidator"] == result2
 
     def test_multiple_updates_same_validator(self):
         """Test multiple updates to same validator overwrites."""
@@ -69,12 +68,12 @@ class TestAisertStatus:
         result1 = Result(True, "First")
         result2 = Result(False, "Second")
         
-        status.update("TestValidator", result1)
-        status.update("TestValidator", result2)
+        status.update("TokenValidator", result1)
+        status.update("TokenValidator", result2)
         
         collected = status.collect()
         assert len(collected) == 1
-        assert collected["TestValidator"] == result2
+        assert collected["TokenValidator"] == result2
 
 
 class TestAisertReport:

@@ -28,11 +28,13 @@ class ContainsValidator(BaseValidator):
 
         if self.invert:
             # For assert_not_contains: success when nothing is found
-            success = len(found) == 0
-            reason = f"Found flagged items: {found}" if found else "No flagged items found"
+
+            if found:
+                raise ContainsValidationError(f"Found flagged items: {found}")
+            reason = f"No flagged items found"
         else:
             # For assert_contains: success when nothing is missing
-            success = len(missing) == 0
-            reason = f"Missing items: {missing}" if missing else f"Found all items: {found}"
-
-        return Result(success, reason)
+            if missing:
+                raise ContainsValidationError(f"Following items not present in the content: {missing}")
+            reason = f"Found all items: {found}"
+        return Result(True, reason)
