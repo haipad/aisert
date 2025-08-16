@@ -10,7 +10,7 @@ class BaseValidator:
         self.logger = logging.getLogger(self.__class__.__name__)
         self.validator_name = name
 
-    def validate(self) -> dict:
+    def validate(self, *args, **kwargs) -> dict:
         """Validate content against a schema."""
         raise NotImplementedError("Subclasses must implement this method.")
     

@@ -1,6 +1,5 @@
 import logging
 import sys
-import time
 import os
 
 # Add parent directory to path to import aisert

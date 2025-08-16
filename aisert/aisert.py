@@ -11,7 +11,6 @@ from .validators.contains_validator import ContainsValidator
 from .validators.schema_validator import SchemaValidator
 from .validators.semantic_validator import SemanticValidator
 from .validators.token_validator.token_validator import TokenValidator
-from .utils.print_util import PrintUtil as pu
 
 
 class Aisert:
@@ -40,7 +39,7 @@ class Aisert:
         :return: The result of the schema validation.
         """
         self.logger.debug(f"Checking if content is matching {schema}")
-        self._validate(SchemaValidator(), strict,self.content, schema)
+        self._validate(SchemaValidator(), strict, self.content, schema)
         return self
 
     def assert_contains(self, items: List[str], strict: bool = True):
@@ -54,7 +53,18 @@ class Aisert:
         self._validate(ContainsValidator(), strict, self.content, items)
         return self
 
-    def assert_tokens(self, size:int, strict: bool = True):
+    def assert_not_contains(self, items: List[str], strict: bool = True):
+        """
+        Asserts that the content does not contain the specified items.
+        :param items: A list of items to check for in the content.
+        :param strict: If True, raises AisertError on validation failure.
+        :return: The result of not-contains validation.
+        """
+        self.logger.debug(f"Checking if content not contains {items}")
+        self._validate(ContainsValidator(invert=True), strict, self.content, items)
+        return self
+
+    def assert_tokens(self, size: int, strict: bool = True):
         """
         Asserts that the number of tokens in the content is less than the specified size.
         :param size: The maximum number of tokens allowed.
@@ -63,8 +73,9 @@ class Aisert:
         """
         self.logger.debug(f"Checking if tokens less than: {size}")
         self._validate(TokenValidator(model_provider=self.config.model_provider), strict,
-                       self.content, token_limit=size, token_model=self.config.token_model, token_encoding=self.config.token_encoding
-        )
+                       self.content, token_limit=size, token_model=self.config.token_model,
+                       token_encoding=self.config.token_encoding
+                       )
         return self
 
     def assert_semantic_matches(self, other, threshold: float = 0.8, strict: bool = True):
@@ -104,7 +115,7 @@ class Aisert:
         :return: A dictionary containing the validation results.
         """
         results = {
-            "status" : all(v.status for v in self.status.collect().values()),
+            "status": all(v.status for v in self.status.collect().values()),
             "rules": {}
         }
         for k, v in self.status.collect().items():

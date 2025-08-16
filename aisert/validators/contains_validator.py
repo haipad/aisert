@@ -10,18 +10,29 @@ class ContainsValidator(BaseValidator):
     Validates if a text contains a specific substring.
     """
 
-    def __init__(self):
+    def __init__(self, invert=False):
         super().__init__("ContainsValidator")
+        self.invert = invert
 
     def validate(self, content, items: List) -> Result:
         """
         Validate if the content contains the specified substring.
-        
-        :param content: The content to validate.
-        :param items: List of items to be checked for
-        :return: True if the content contains the substring, False otherwise.
         """
         if not isinstance(items, list):
-            raise ContainsValidationError(False, f"items must be a list")
-        missing = [item for item in items if item not in content]
-        return Result(len(missing) == 0, f"Missing: {missing or '[None]'}")
+            raise ContainsValidationError("items must be a list")
+
+        # Capture both missing and found in single pass
+        missing, found = [], []
+        for item in items:
+            (found if item in content else missing).append(item)
+
+        if self.invert:
+            # For assert_not_contains: success when nothing is found
+            success = len(found) == 0
+            reason = f"Found flagged items: {found}" if found else "No flagged items found"
+        else:
+            # For assert_contains: success when nothing is missing
+            success = len(missing) == 0
+            reason = f"Missing items: {missing}" if missing else f"Found all items: {found}"
+
+        return Result(success, reason)

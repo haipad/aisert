@@ -1,3 +1,5 @@
+import json
+from json import JSONDecodeError
 from typing import Any
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
@@ -23,6 +25,13 @@ class SchemaValidator(BaseValidator):
         :return: Result true/false with reason.
         """
         self.logger.debug(f"Validating content against schema: {schema}")
+
+        try:
+            if type(content) is str:
+                content = json.loads(content)
+        except JSONDecodeError as e:
+            raise SchemaValidationError(f"Content is not a valid JSON: {e}")
+
         is_pydantic_model = isinstance(schema, type) and issubclass(schema, BaseModel)
         is_generic_type = hasattr(schema, "__origin__")
         if not (is_pydantic_model or is_generic_type):
