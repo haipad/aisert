@@ -15,16 +15,36 @@ from .validators.token_validator.token_validator import TokenValidator
 
 class Aisert:
     """
-    Aisert is a class that provides methods for configuration, schema assertion,
-    containment checks, token size assertions, and semantic equality checks.
-    It is designed to be flexible and can be extended with additional functionality
-    as needed.
+    Main validation class for AI/LLM response validation with fluent interface.
+    
+    Provides chainable validation methods for:
+    - Schema validation (Pydantic models)
+    - Content validation (contains/not contains)
+    - Token counting (with various providers)
+    - Semantic similarity matching
+    
+    Supports both strict mode (raises exceptions) and non-strict mode (collects errors).
+    
+    Example:
+        result = (
+            Aisert("Paris is the capital of France.")
+            .assert_contains(["Paris", "France"])
+            .assert_tokens(max_tokens=50)
+            .assert_semantic_matches("France's capital", threshold=0.8)
+            .collect()
+        )
     """
 
     def __init__(self, content, config: Optional[AisertConfig] = None):
         """
-        Initializes the Aisert instance with the provided content.
-        :param content: The content to be validated. Expected to be a LLM response string.
+        Initialize Aisert with content to validate.
+        
+        Args:
+            content: Text, dict, or list to validate (typically LLM response)
+            config: Optional configuration for token counting and semantic models
+        
+        Example:
+            aisert = Aisert("Hello world", AisertConfig(token_model="gpt-4"))
         """
         self.logger = logging.getLogger(self.__class__.__name__)
         self.content = content
@@ -33,10 +53,20 @@ class Aisert:
 
     def assert_schema(self, schema, strict: bool = True):
         """
-        Asserts that the content matches the provided schema.
-        :param schema: The schema to validate against.
-        :param strict: If True, raises AisertError on validation failure.
-        :return: The result of the schema validation.
+        Validate content against a Pydantic model schema.
+        
+        Args:
+            schema: Pydantic model class or generic type to validate against
+            strict: If True, raises exception on failure; if False, collects error
+        
+        Returns:
+            Self for method chaining
+        
+        Raises:
+            SchemaValidationError: If validation fails and strict=True
+        
+        Example:
+            aisert.assert_schema(UserModel)  # Validates JSON against UserModel
         """
         self.logger.debug(f"Checking if content is matching {schema}")
         self._validate(SchemaValidator(), strict, self.content, schema)
@@ -44,10 +74,20 @@ class Aisert:
 
     def assert_contains(self, items: List[str], strict: bool = True):
         """
-        Asserts that the content contains the specified items.
-        :param items: A list of items to check for in the content.
-        :param strict: If True, raises AisertError on validation failure.
-        :return: The result of the containment validation.
+        Validate that content contains all specified items.
+        
+        Args:
+            items: List of strings that must be present in the content
+            strict: If True, raises exception on failure; if False, collects error
+        
+        Returns:
+            Self for method chaining
+        
+        Raises:
+            ContainsValidationError: If any items are missing and strict=True
+        
+        Example:
+            aisert.assert_contains(["required", "keywords"])
         """
         self.logger.debug(f"Checking if content contains {items}")
         self._validate(ContainsValidator(), strict, self.content, items)
@@ -55,39 +95,75 @@ class Aisert:
 
     def assert_not_contains(self, items: List[str], strict: bool = True):
         """
-        Asserts that the content does not contain the specified items.
-        :param items: A list of items to check for in the content.
-        :param strict: If True, raises AisertError on validation failure.
-        :return: The result of not-contains validation.
+        Validate that content does NOT contain any of the specified items.
+        
+        Args:
+            items: List of strings that must NOT be present in the content
+            strict: If True, raises exception on failure; if False, collects error
+        
+        Returns:
+            Self for method chaining
+        
+        Raises:
+            ContainsValidationError: If any flagged items are found and strict=True
+        
+        Example:
+            aisert.assert_not_contains(["spam", "inappropriate"])
         """
         self.logger.debug(f"Checking if content not contains {items}")
         self._validate(ContainsValidator(invert=True), strict, self.content, items)
         return self
 
-    def assert_tokens(self, size: int, strict: bool = True):
+    def assert_tokens(self, max_tokens: int, strict: bool = True):
         """
-        Asserts that the number of tokens in the content is less than the specified size.
-        :param size: The maximum number of tokens allowed.
-        :param strict: If True, raises AisertError on validation failure.
-        :return: The result of the token validation.
+        Validate that content token count is within the specified limit.
+        
+        Uses the configured token model and provider for accurate counting.
+        
+        Args:
+            max_tokens: Maximum number of tokens allowed
+            strict: If True, raises exception on failure; if False, collects error
+        
+        Returns:
+            Self for method chaining
+        
+        Raises:
+            TokenValidationError: If token count exceeds limit and strict=True
+        
+        Example:
+            aisert.assert_tokens(max_tokens=100)  # Ensure response is under 100 tokens
         """
-        self.logger.debug(f"Checking if tokens less than: {size}")
+        self.logger.debug(f"Checking if tokens less than: {max_tokens}")
         self._validate(TokenValidator(model_provider=self.config.model_provider), strict,
-                       self.content, token_limit=size, token_model=self.config.token_model,
+                       self.content, token_limit=max_tokens, token_model=self.config.token_model,
                        token_encoding=self.config.token_encoding
                        )
         return self
 
-    def assert_semantic_matches(self, other, threshold: float = 0.8, strict: bool = True):
+    def assert_semantic_matches(self, expected_text: str, threshold: float = 0.8, strict: bool = True):
         """
-        Asserts that the semantic content of this instance matches other text.
-        :param other: Other text to compare against.
-        :param strict: If True, raises AisertError on validation failure.
-        :return: The result of the semantic validation.
+        Validate semantic similarity between content and expected text.
+        
+        Uses sentence transformers to compute cosine similarity between embeddings.
+        Note: First use may take ~30 seconds to load the model.
+        
+        Args:
+            expected_text: Text to compare against for semantic similarity
+            threshold: Minimum similarity score (0.0 to 1.0) required to pass
+            strict: If True, raises exception on failure; if False, collects error
+        
+        Returns:
+            Self for method chaining
+        
+        Raises:
+            SemanticValidationError: If similarity below threshold and strict=True
+        
+        Example:
+            aisert.assert_semantic_matches("Information about AI", threshold=0.75)
         """
         self.logger.debug(f"Checking semantic match")
         self._validate(SemanticValidator.get_instance(model_name=self.config.sentence_transformer_model),
-                       strict, self.content, other, threshold)
+                       strict, self.content, expected_text, threshold)
         return self
 
     def _validate(self, validator, strict, *args, **kwargs):
@@ -99,25 +175,36 @@ class Aisert:
         """
         try:
             result = validator.validate(*args, **kwargs)
-            self.logger.debug(f"{validator.name} validation result: {result.status}")
+            self.logger.debug(f"{validator.validator_name} validation result: {result.status}")
         except AisertError as e:
             if strict:
-                self.logger.error(f"{validator.name} validation failed")
+                self.logger.error(f"{validator.validator_name} validation failed")
                 raise
             else:
-                self.logger.error(f"{validator.name} validation failed: {str(e)}")
-                result = Result(status=False, reason=str(e))
-        self.status.update(validator.name, result)
+                self.logger.error(f"{validator.validator_name} validation failed: {str(e)}")
+                result = Result(validator.validator_name, False, str(e))
+        self.status.update(result)
 
     def collect(self):
         """
-        Collects the results of all validations performed on this instance.
-        :return: A dictionary containing the validation results.
+        Finalize validation chain and return comprehensive results.
+        
+        Returns:
+            AisertReport containing:
+            - status: True if all validations passed, False otherwise
+            - rules: Dictionary mapping execution order to validation results
+        
+        Example:
+            report = aisert.assert_contains(["test"]).collect()
+            if report.status:
+                print("All validations passed!")
+            else:
+                print(f"Failures: {report.rules}")
         """
         results = {
-            "status": all(v.status for v in self.status.collect().values()),
+            "status": all(result.status for result in self.status.validators.values()),
             "rules": {}
         }
-        for k, v in self.status.collect().items():
+        for k, v in self.status.validators.items():
             results["rules"][k] = v.to_dict()
         return AisertReport(**results)

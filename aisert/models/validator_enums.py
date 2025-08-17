@@ -7,8 +7,10 @@ class ValidatorEnums(Enum):
     """
     SCHEMA = "SchemaValidator"
     CONTAINS = "ContainsValidator"
+    NOT_CONTAINS = "NotContainsValidator"
     TOKENS = "TokenValidator"
     SEMANTIC = "SemanticValidator"
+
 
     @classmethod
     def members(cls):

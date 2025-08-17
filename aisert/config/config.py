@@ -5,24 +5,38 @@ from aisert.config.defaults import DefaultConfig
 
 class AisertConfig:
     """
-    Configuration class for Aisert.
-    This class holds the configuration settings for the Aisert application.
+    Configuration settings for Aisert validation operations.
+    
+    Controls token counting providers, models, and semantic similarity settings.
+    Supports multiple AI providers: OpenAI, Anthropic, HuggingFace, Google.
+    
+    Example:
+        config = AisertConfig(
+            model_provider="openai",
+            token_model="gpt-4",
+            sentence_transformer_model="all-MiniLM-L6-v2"
+        )
     """
     logger = logging.getLogger("AisertConfig")
 
     def __init__(
         self,
-        model_provider,
+        model_provider: str,
         token_model: str,
         token_encoding: str = None,
-        sentence_transformer_model: str = "all-MiniLM-L6-v1",
+        sentence_transformer_model: str = "all-MiniLM-L6-v2",
     ):
         """
-        Initializes the AisertConfig with the provided parameters.
-        :param token_encoding: The encoding type for tokens (applicable only for openAI models).
-        :param token_model: The model used for tokenization.
-        :param model_provider: The provider of the LLM model being used.
-        :param sentence_transformer_model: The sentence transformer model used for semantic validation.
+        Initialize configuration with AI provider and model settings.
+        
+        Args:
+            model_provider: AI provider ("openai", "anthropic", "huggingface", "google")
+            token_model: Specific model for token counting (e.g., "gpt-4", "claude-3")
+            token_encoding: Token encoding method (OpenAI only, e.g., "cl100k_base")
+            sentence_transformer_model: Model for semantic similarity (default: "all-MiniLM-L6-v1")
+        
+        Example:
+            config = AisertConfig("openai", "gpt-3.5-turbo", token_encoding="cl100k_base")
         """
         self.mode = "default"
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -35,7 +49,14 @@ class AisertConfig:
     @staticmethod
     def get_default_config():
         """
-        Returns the default configuration for Aisert.
+        Get default configuration optimized for most common use cases.
+        
+        Returns:
+            AisertConfig with OpenAI gpt-3.5-turbo and all-MiniLM-L6-v2 models
+        
+        Example:
+            config = AisertConfig.get_default_config()
+            # Uses: openai provider, gpt-3.5-turbo, all-MiniLM-L6-v2
         """
         default_config = DefaultConfig.to_dict()
         return AisertConfig(**default_config)
@@ -43,9 +64,17 @@ class AisertConfig:
     @staticmethod
     def load(file_path: str) -> "AisertConfig":
         """
-        Loads the configuration from a JSON file.
-        :param file_path: Path to the JSON configuration file.
-        :return: An instance of AisertConfig with the loaded settings.
+        Load configuration from a JSON file with fallback to defaults.
+        
+        Args:
+            file_path: Path to JSON configuration file
+        
+        Returns:
+            AisertConfig loaded from file, or default config if file invalid/missing
+        
+        Example:
+            config = AisertConfig.load("my_config.json")
+            # Falls back to defaults if file not found or invalid JSON
         """
         import json
         import os

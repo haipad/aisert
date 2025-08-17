@@ -1,5 +1,4 @@
-
-
+from collections import defaultdict
 from typing import Dict
 
 from ..models.validator_enums import ValidatorEnums
@@ -7,55 +6,86 @@ from ..models.validator_enums import ValidatorEnums
 
 class Result:
     """
-    Represents the result of a validation operation.
-    Contains status and reason for the validation result.
+    Represents the result of a single validation operation.
+    
+    Each Result contains:
+    - validator: Name of the validator that produced this result
+    - status: Boolean indicating if validation passed (True) or failed (False)
+    - reason: Human-readable explanation of the validation outcome
+    
+    Example:
+        result = Result("ContainsValidator", True, "Found all required items")
     """
 
-    def __init__(self, status: bool, reason: str = ""):
+    def __init__(self, validator: str, status: bool, reason: str = ""):
         """
-        Initializes the Result with a status and an optional reason.
-        :param status: The status of the validation (True or False).
-        :param reason: The reason for the validation result.
+        Create a new validation result.
+        
+        Args:
+            validator: Name of the validator that produced this result
+            status: True if validation passed, False if it failed
+            reason: Human-readable explanation of why validation passed/failed
+        
+        Example:
+            result = Result("TokenValidator", False, "Token count 150 exceeds limit 100")
         """
+        self.validator = validator
         self.status = status
         self.reason = reason
-    
+
     def to_dict(self) -> Dict[str, str]:
         """
-        Converts the Result object to a dictionary.
-        :return: A dictionary containing the status and reason.
+        Convert the Result to a dictionary for serialization or reporting.
+        
+        Returns:
+            Dictionary with 'validator', 'status', and 'reason' keys
+        
+        Example:
+            {"validator": "ContainsValidator", "status": True, "reason": "All items found"}
         """
-        return {"status": self.status, "reason": self.reason}
+        return {"validator": self.validator, "status": self.status, "reason": self.reason}
 
 
 class AisertStatus:
     """
-    Represents the status of an Aisert operation.
-    Contains the status and reason for the operation.
+    Tracks validation results in the order they were executed.
+    
+    Maintains an ordered collection of validation results, allowing:
+    - Multiple validations of the same type (e.g., multiple assert_contains calls)
+    - Preservation of execution order for debugging and reporting
+    - Easy access to all validation outcomes
+    
+    Attributes:
+        validators: Dictionary mapping execution order (int) to Result objects
+        _order: Internal counter for tracking execution sequence
+    
+    Example:
+        status = AisertStatus()
+        status.update(Result("ContainsValidator", True, "Found items"))
+        status.update(Result("TokenValidator", False, "Too many tokens"))
+        # status.validators = {1: Result(...), 2: Result(...)}
     """
 
     def __init__(self):
         """
-        Initializes the AisertStatus with a validator type, status, and an optional reason.
-        :param validator: The type of validator used for the operation.
-        :param status: The status of the operation (True or False).
-        :param reason: The reason for the operation result.
+        Initialize an empty status tracker.
+        
+        Creates an empty validators dictionary and sets the execution order counter to 1.
         """
-        self.validators = {validator.value: None for validator in ValidatorEnums}
+        self.validators = {}
+        self._order = 1
 
-    def update(self, validator: str, result: Result):
+    def update(self, result: Result):
         """
-        Updates the status of a specific validator.
-        :param validator: The type of validator to update.
-        :param status: The status of the validator (True or False).
-        :param reason: The reason for the validator's status.
+        Add a new validation result in execution order.
+        
+        Args:
+            result: Result object from a validator containing outcome and details
+        
+        Example:
+            result = Result("SchemaValidator", True, "Schema validation passed")
+            status.update(result)
+            # Now status.validators[1] contains this result
         """
-        if validator in ValidatorEnums.members():
-            self.validators[validator] = result
-
-    def collect(self) -> Dict[str, Result]:
-        """
-        Collects the status of all validators.
-        :return: A dictionary containing the status of each validator.
-        """
-        return {k: v for k, v in self.validators.items() if v is not None}
+        self.validators[self._order] = result
+        self._order += 1

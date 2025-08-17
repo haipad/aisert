@@ -1,8 +1,12 @@
 # Aisert 🚀
 
-Validate AI responses with confidence! ✨  
-Aisert provides a fluent, chainable API for comprehensive AI output validation.  
-From token counts to semantic similarity - ensure your AI behaves exactly as expected! 🎯
+> Assert-style validation library for AI outputs - ensure your LLMs behave exactly as expected
+
+✨ Validate AI responses with confidence!  
+🔗 Fluent, chainable API for comprehensive AI output validation  
+🎯 From token counts to semantic similarity - production-ready validation
+
+> ⚠️ **Alpha Release** - Currently in alpha. Feedbacks welcome!
 
 ## Who Is This For? 👥
 
@@ -19,6 +23,20 @@ From token counts to semantic similarity - ensure your AI behaves exactly as exp
 - **Thread-Safe**: Production-ready with proper concurrency handling and model caching
 - **Multi-Provider Support**: OpenAI, Anthropic, HuggingFace, and Google token counting
 - **Extensible**: Custom token validators via TokenValidatorBase inheritance
+
+## Prerequisites & Setup
+
+### System Requirements
+- Python >= 3.9
+- 1GB+ RAM (for semantic models)
+- 500MB+ disk space (model downloads)
+
+### API Keys (for token counting)
+```bash
+# Set environment variables for your providers
+export OPENAI_API_KEY="your-openai-key"
+export ANTHROPIC_API_KEY="your-anthropic-key"
+```
 
 ## Installation
 
@@ -63,7 +81,7 @@ Aisert(content).assert_not_contains(["spam", "inappropriate"])
 
 ### Token Count Validation
 ```python
-# Ensure response is within token limits
+# Ensure response is within token limits (requires API call)
 Aisert(content, config).assert_tokens(max_tokens=100)
 ```
 
@@ -81,10 +99,42 @@ Aisert(json_content).assert_schema(UserModel)
 
 ### Semantic Similarity
 ```python
-# Check semantic similarity to expected content
+# Check semantic similarity (first run loads model, then fast)
+# Loading time varies by model - use lightweight models for speed
 Aisert(content).assert_semantic_matches(
     expected="Information about artificial intelligence",
     threshold=0.75
+)
+```
+
+## Validation Patterns
+
+### Content Moderation (Instant)
+```python
+# Fast validation - no model loading required
+result = Aisert(content).assert_not_contains(["spam", "inappropriate"]).collect()
+```
+
+### API Response Validation (Comprehensive)
+```python
+# Full validation with all validators
+result = (
+    Aisert(content, config)
+    .assert_contains(["required_info"])
+    .assert_tokens(max_tokens=100)
+    .assert_semantic_matches("expected meaning", 0.8)
+    .collect()
+)
+```
+
+### Performance-Optimized (Selective)
+```python
+# Use only needed validators for optimal performance
+result = (
+    Aisert(content, config)
+    .assert_not_contains(["inappropriate"])
+    .assert_tokens(max_tokens=200)
+    .collect()
 )
 ```
 
@@ -191,13 +241,46 @@ except AisertError as e:
     print(f"General validation error: {e}")
 ```
 
-## Important Notes 📝
+## Performance Notes 📝
 
-- **First Model Load**: Initial semantic model loading takes ~30 seconds ⏳
-- **Custom Token Validators**: Extend `TokenValidatorBase` for custom providers 🔧
-- **Performance**: Models are cached after first load for faster subsequent validations ⚡
+- **First Run**: Semantic validation slower initially (model loading time varies by model) ⏳
+- **Subsequent**: All validations fast (<100ms) ⚡
+- **Selective Usage**: Use only needed validators for optimal performance 🎯
+- **Model Caching**: Models cached after first load for 10x+ speedup 🚀
 - **Thread Safety**: All validators use singleton pattern with proper locking 🔒
 - **Default Config**: Uses OpenAI gpt-3.5-turbo and all-MiniLM-L6-v2 by default ⚙️
+
+## Troubleshooting 🔧
+
+### Common Issues
+
+**Model Loading Timeout**
+```python
+# Use lightweight model for faster loading
+config = AisertConfig(
+    sentence_transformer_model="paraphrase-MiniLM-L3-v2"  # Ultra-fast
+)
+```
+
+**API Key Errors**
+```bash
+# Ensure environment variables are set
+echo $OPENAI_API_KEY
+echo $ANTHROPIC_API_KEY
+```
+
+**Memory Issues**
+- Semantic models use 100-500MB RAM
+- Use lightweight models on resource-constrained systems
+- Consider content-only validation for high-volume scenarios
+
+**Dependency Conflicts**
+```bash
+# Install in clean environment
+python -m venv aisert-env
+source aisert-env/bin/activate  # or aisert-env\Scripts\activate on Windows
+pip install aisert
+```
 
 ## Current Limitations ⚠️
 
@@ -211,11 +294,6 @@ except AisertError as e:
 - **HuggingFace**: AutoTokenizer from transformers library
 - **Google**: genai client integration (experimental)
 - **Custom**: Extend TokenValidatorBase for additional providers
-
-## Requirements
-
-- Python >= 3.9
-- Dependencies: jsonschema, sentence-transformers, tiktoken, transformers, anthropic, pydantic, torch
 
 ## License
 

@@ -3,6 +3,7 @@ import threading
 from ..exception import SemanticValidationError
 from ..models.result import Result
 from .validator import BaseValidator
+from ..models.validator_enums import ValidatorEnums
 
 
 class SemanticValidator(BaseValidator):
@@ -12,10 +13,10 @@ class SemanticValidator(BaseValidator):
     def __init__(self, model_name):
         from sentence_transformers import SentenceTransformer  # lazy import
 
-        super().__init__("SemanticValidator")
+        super().__init__(ValidatorEnums.SEMANTIC)
         self.model = SentenceTransformer(model_name)
 
-    def validate(self, text1: str, text2: str, threshold: float=0.8) -> Result:
+    def validate(self, text1: str, text2: str, threshold: float = 0.8) -> Result:
         """
         Compare two texts for semantic similarity.
 
@@ -37,7 +38,10 @@ class SemanticValidator(BaseValidator):
             embeddings1 = self.model.encode(text1, convert_to_tensor=True)
             embeddings2 = self.model.encode(text2, convert_to_tensor=True)
             similarity_score = util.pytorch_cos_sim(embeddings1, embeddings2).item()
-            return Result(similarity_score >= threshold,
+            if similarity_score < threshold:
+                raise SemanticValidationError(
+                    f"Semantic similarity score: {similarity_score} is lesser than threshold: {threshold}")
+            return Result(self.validator_name, True,
                           f"Semantic similarity score: {similarity_score}, Threshold: {threshold}")
 
     @classmethod

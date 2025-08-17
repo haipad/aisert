@@ -1,6 +1,6 @@
 [project]
 name = "aisert"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
     "jsonschema>=4.0.0",
     "sentence-transformers>=2.0.0",
@@ -13,7 +13,7 @@ dependencies = [
 authors = [
   { name="haipad", email="hariprayush@gmail.com" },
 ]
-description = "Validate AI responses with confidence! Fluent, chainable API for comprehensive AI output validation."
+description = "Assert-style validation library for AI outputs - ensure your LLMs behave exactly as expected"
 readme = "README.md"
 requires-python = ">=3.9"
 classifiers = [

@@ -95,7 +95,7 @@ class TestIntegration:
         )
         
         assert result.status is True
-        # assert len(result.rules) == 3
+        assert len(result.rules) == 3
 
     @patch('aisert.validators.token_validator.token_validator_factory.TokenValidatorFactory.get_instance')
     def test_mixed_validation_results(self, mock_factory):
@@ -114,17 +114,19 @@ class TestIntegration:
         result = (
             Aisert(content, config)
             .assert_contains(["Hello"], strict=False)  # Pass
-                .assert_tokens(10, strict=False)  # Pass
+            .assert_contains(["missing"], strict=False)  # Fail
+            .assert_tokens(10, strict=False)  # Pass
             .collect()
         )
         
-        assert result.status is True  # Overall failure due to one failed validation
-        assert len(result.rules) == 2
+        assert result.status is False  # Overall failure due to one failed validation
+        assert len(result.rules) == 3
         
-        # Check individual results
+        # Check individual results - they are now ordered by execution
         rules = result.rules
-        assert rules['ContainsValidator']['status'] is True
-        assert rules['TokenValidator']['status'] is True
+        assert rules[1]['status'] is True   # First contains check passed
+        assert rules[2]['status'] is False  # Second contains check failed
+        assert rules[3]['status'] is True   # Token validation passed
 
     def test_batch_processing_simulation(self):
         """Test batch processing of multiple responses."""
@@ -176,18 +178,20 @@ class TestIntegration:
         # Verify JSON conversion happened
         mock_validator.count.assert_called_once()
 
-    # def test_error_recovery_in_chain(self):
-    #     """Test error recovery in validation chain."""
-    #     # This tests that one validation failure doesn't break the chain
-    #     result = (
-    #         Aisert("test content")
-    #         .assert_contains(["missing"], strict=False)  # This will fail
-    #         .assert_contains(["test"], strict=False)     # This will pass
-    #         .collect()
-    #     )
-    #
-    #     assert result.status is False  # Overall failure
-    #     assert len(result.rules) == 1  # Only one ContainsValidator entry (last one)
+    def test_error_recovery_in_chain(self):
+        """Test error recovery in validation chain."""
+        # This tests that one validation failure doesn't break the chain
+        result = (
+            Aisert("test content")
+            .assert_contains(["missing"], strict=False)  # This will fail
+            .assert_contains(["test"], strict=False)     # This will pass
+            .collect()
+        )
+
+        assert result.status is False  # Overall failure
+        assert len(result.rules) == 2
+        assert result.rules[1]['status'] is False  # First validation failed
+        assert result.rules[2]['status'] is True   # Second validation passed
         
     def test_configuration_inheritance(self):
         """Test that configuration is properly inherited through chain."""

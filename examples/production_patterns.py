@@ -182,34 +182,138 @@ def performance_monitoring():
     """Monitor validation performance in production"""
     import time
     
+    # More realistic test data with varying content
     responses = [
-        "Sample response 1 for performance testing",
-        "Sample response 2 for performance testing", 
-        "Sample response 3 for performance testing"
-    ] * 10  # 30 responses total
+        "This is a comprehensive customer service response that includes helpful information and detailed explanations for the user's inquiry.",
+        "Our AI-powered system has successfully processed your request and generated appropriate documentation for your needs.",
+        "The automated testing framework validates code quality and ensures robust performance across different environments and scenarios.",
+        "Machine learning algorithms analyze patterns in user behavior to provide personalized recommendations and improve overall experience.",
+        "Quality assurance processes include multiple validation steps to ensure accuracy, reliability, and compliance with industry standards."
+    ] * 6  # 30 responses total
     
     config = AisertConfig(
         token_model="gpt-3.5-turbo",
-        model_provider="openai"
+        model_provider="openai",
+        sentence_transformer_model="all-MiniLM-L6-v1"
     )
     
+    print(f"Testing performance with {len(responses)} responses...")
     start_time = time.time()
     
-    for response in responses:
+    validation_results = []
+    for i, response in enumerate(responses, 1):
+        # More comprehensive validation to show realistic timing
         result = (
             Aisert(response, config)
-            .assert_contains(["response", "testing"], strict=False)
-            .assert_tokens(100, strict=False)
+            .assert_contains(["the", "and", "for"], strict=False)  # Common words
+            .assert_not_contains(["error", "failed", "broken"], strict=False)  # Negative terms
+            .assert_tokens(max_tokens=200, strict=False)  # Token limit
             .collect()
         )
+        validation_results.append(result.status)
+        
+        # Progress indicator for longer runs
+        if i % 10 == 0:
+            print(f"  Processed {i}/{len(responses)} responses...")
     
     end_time = time.time()
+    total_time = end_time - start_time
+    avg_time = total_time / len(responses)
     
-    print(f"Processed {len(responses)} responses in {end_time - start_time:.2f} seconds")
-    print(f"Average time per validation: {(end_time - start_time) / len(responses):.3f} seconds")
+    # Calculate success rate
+    success_rate = sum(validation_results) / len(validation_results) * 100
+    
+    print(f"\n📊 Performance Results:")
+    print(f"  Total time: {total_time:.2f} seconds")
+    print(f"  Average per validation: {avg_time*1000:.1f} ms")
+    print(f"  Throughput: {len(responses)/total_time:.1f} validations/second")
+    print(f"  Success rate: {success_rate:.1f}%")
+    
+    # Performance thresholds for monitoring
+    if avg_time > 0.1:  # 100ms threshold
+        print(f"  ⚠️  Warning: Average response time ({avg_time*1000:.1f}ms) exceeds 100ms threshold")
+    else:
+        print(f"  ✅ Performance within acceptable limits")
+
+def enterprise_configuration_management():
+    """
+    Enterprise-grade configuration management patterns.
+    """
+    print("\n=== Enterprise Configuration Management ===")
+    
+    # Environment-specific configurations
+    configs = {
+        "development": AisertConfig(
+            model_provider="openai",
+            token_model="gpt-3.5-turbo",
+            sentence_transformer_model="all-MiniLM-L6-v1"  # Fast for dev
+        ),
+        "production": AisertConfig(
+            model_provider="openai",
+            token_model="gpt-4",
+            sentence_transformer_model="all-MiniLM-L12-v2"  # Production-grade
+        )
+    }
+    
+    # Simulate environment selection
+    import os
+    env = os.getenv("ENVIRONMENT", "development")
+    config = configs.get(env, configs["development"])
+    
+    print(f"Using {env} configuration: {config.token_model}")
+    
+    test_content = "This is a test response for validation."
+    result = (
+        Aisert(test_content, config)
+        .assert_contains(["test"], strict=False)
+        .assert_tokens(max_tokens=50, strict=False)
+        .collect()
+    )
+    
+    print(f"Validation result: {'✅ PASS' if result.status else '❌ FAIL'}")
+
+
+def microservices_integration_pattern():
+    """
+    Integration patterns for microservices architecture.
+    """
+    print("\n=== Microservices Integration Pattern ===")
+    
+    class ValidationService:
+        """Centralized validation service for microservices."""
+        
+        def __init__(self):
+            self.config = AisertConfig(
+                model_provider="openai",
+                token_model="gpt-3.5-turbo",
+                sentence_transformer_model="all-MiniLM-L6-v1"
+            )
+        
+        def validate_user_content(self, content: str) -> dict:
+            """Validate user-generated content."""
+            result = (
+                Aisert(content, self.config)
+                .assert_not_contains(["spam", "inappropriate"], strict=False)
+                .assert_tokens(max_tokens=500, strict=False)
+                .collect()
+            )
+            
+            return {
+                "is_valid": result.status,
+                "validation_details": result.rules,
+                "service": "content-validation"
+            }
+    
+    # Usage example
+    validation_service = ValidationService()
+    user_content = "This is a great product review!"
+    result = validation_service.validate_user_content(user_content)
+    print(f"User content validation: {'✅ PASS' if result['is_valid'] else '❌ FAIL'}")
+
 
 if __name__ == "__main__":
-    print("=== Production Patterns Examples ===\n")
+    print("🏢 Aisert Production Patterns")
+    print("=" * 50)
     
     print("1. Testing Framework Integration:")
     test_llm_response_quality()
@@ -225,3 +329,9 @@ if __name__ == "__main__":
     
     print("\n5. Performance Monitoring:")
     performance_monitoring()
+    
+    enterprise_configuration_management()
+    microservices_integration_pattern()
+    
+    print("\n✨ Production patterns completed!")
+    print("💡 These patterns can be adapted for your specific enterprise needs.")

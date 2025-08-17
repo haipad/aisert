@@ -21,3 +21,8 @@ class SemanticValidationError(AisertError):
 class ContainsValidationError(AisertError):
     """Text contain validation errors"""
     pass
+
+
+class NotContainsValidationError(AisertError):
+    """Text not contains validation errors"""
+    pass

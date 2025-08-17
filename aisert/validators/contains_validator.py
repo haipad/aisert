@@ -3,6 +3,7 @@ from typing import List
 from .validator import BaseValidator
 from ..exception import ContainsValidationError
 from ..models.result import Result
+from ..models.validator_enums import ValidatorEnums
 
 
 class ContainsValidator(BaseValidator):
@@ -11,7 +12,7 @@ class ContainsValidator(BaseValidator):
     """
 
     def __init__(self, invert=False):
-        super().__init__("ContainsValidator")
+        super().__init__(ValidatorEnums.CONTAINS)
         self.invert = invert
 
     def validate(self, content, items: List) -> Result:
@@ -37,4 +38,4 @@ class ContainsValidator(BaseValidator):
             if missing:
                 raise ContainsValidationError(f"Following items not present in the content: {missing}")
             reason = f"Found all items: {found}"
-        return Result(True, reason)
+        return Result(self.validator_name,True, reason)

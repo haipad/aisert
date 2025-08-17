@@ -5,6 +5,7 @@ from .token_validator_factory import TokenValidatorFactory
 from ...exception import TokenValidationError
 from ..validator import BaseValidator
 from ...models.result import Result
+from ...models.validator_enums import ValidatorEnums
 
 
 class TokenValidator(BaseValidator):
@@ -13,7 +14,7 @@ class TokenValidator(BaseValidator):
     """
 
     def __init__(self, model_provider: str = None):
-        super().__init__("TokenValidator")
+        super().__init__(ValidatorEnums.TOKENS)
         self.model_provider = model_provider
 
     def validate(self, text,
@@ -45,7 +46,7 @@ class TokenValidator(BaseValidator):
             if token_count > token_limit:
                 raise TokenValidationError(
                     f"Token limit exceeded: {token_count} tokens found, limit is {token_limit}")
-            return Result(True, f"Token count {token_count} is within limit {token_limit}")
+            return Result(self.validator_name, True, f"Token count {token_count} is within limit {token_limit}")
 
         except TokenValidationError:
             raise

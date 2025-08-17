@@ -47,6 +47,7 @@ class TestAisert:
         result = aisert.assert_contains(["test"], strict=False).collect()
         assert hasattr(result, 'status')
         assert hasattr(result, 'rules')
+        assert result.status is True
 
     def test_strict_mode_raises_exception(self):
         """Test strict mode raises exceptions on failure."""
@@ -61,7 +62,8 @@ class TestAisert:
             .collect()
         )
         assert result.status is False
-        assert "ContainsValidator" in result.rules
+        assert len(result.rules) == 1
+        assert list(result.rules.values())[0]['validator'] == 'ContainsValidator'
 
 
 class TestSchemaValidation:
@@ -237,6 +239,9 @@ class TestChainedValidation:
         )
         assert result.status is True
         assert len(result.rules) == 2
+        # Check that results are ordered
+        assert 1 in result.rules
+        assert 2 in result.rules
 
     @patch('aisert.validators.token_validator.token_validator_factory.TokenValidatorFactory.get_instance')
     def test_multiple_validations_mixed_results(self, mock_factory):
@@ -254,6 +259,8 @@ class TestChainedValidation:
         )
         assert result.status is False  # Overall failure
         assert len(result.rules) == 2
+        assert result.rules[1]['status'] is False  # First validation failed
+        assert result.rules[2]['status'] is True   # Second validation passed
 
 
 class TestErrorHandling:

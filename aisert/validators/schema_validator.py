@@ -6,6 +6,7 @@ from pydantic import BaseModel, TypeAdapter, ValidationError
 from .validator import BaseValidator
 from ..exception import SchemaValidationError
 from ..models.result import Result
+from ..models.validator_enums import ValidatorEnums
 
 
 class SchemaValidator(BaseValidator):
@@ -14,7 +15,7 @@ class SchemaValidator(BaseValidator):
     """
 
     def __init__(self):
-        super().__init__("SchemaValidator")
+        super().__init__(ValidatorEnums.SCHEMA)
 
     def validate(self, content: Any, schema: Any):
         """
@@ -39,7 +40,7 @@ class SchemaValidator(BaseValidator):
             raise SchemaValidationError("Provided schema is not a valid Pydantic model")
         try:
             TypeAdapter(schema).validate_python(content)
-            return Result(True, "")
+            return Result(self.validator_name,True, "")
         except ValidationError as e:
             raise SchemaValidationError(f"{e}")
         except Exception as e:

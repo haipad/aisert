@@ -9,26 +9,21 @@ class TestResult:
     """Test Result model functionality."""
 
     def test_result_creation(self):
-        """Test Result creation with status and reason."""
-        result = Result(True, "Success message")
+        """Test Result creation with validator, status and reason."""
+        result = Result("TestValidator", True, "Success message")
+        assert result.validator == "TestValidator"
         assert result.status is True
         assert result.reason == "Success message"
 
     def test_result_to_dict(self):
         """Test Result to_dict conversion."""
-        result = Result(False, "Error message")
+        result = Result("ErrorValidator", False, "Error message")
         result_dict = result.to_dict()
         
         assert isinstance(result_dict, dict)
+        assert result_dict['validator'] == "ErrorValidator"
         assert result_dict['status'] is False
         assert result_dict['reason'] == "Error message"
-
-    def test_result_str_representation(self):
-        """Test Result string representation."""
-        result = Result(True, "Test reason")
-        str_repr = str(result.to_dict())
-        assert "True" in str_repr
-        assert "Test reason" in str_repr
 
 
 class TestAisertStatus:
@@ -38,42 +33,45 @@ class TestAisertStatus:
         """Test AisertStatus initialization."""
         status = AisertStatus()
         assert isinstance(status.validators, dict)
+        assert len(status.validators) == 0
+        assert status._order == 1
 
     def test_update_status(self):
         """Test updating status with validator results."""
         status = AisertStatus()
-        result = Result(True, "Success")
+        result = Result("TestValidator", True, "Success")
         
-        status.update("ContainsValidator", result)
-        assert "ContainsValidator" in status.validators
-        assert status.validators["ContainsValidator"] == result
+        status.update(result)
+        assert 1 in status.validators
+        assert status.validators[1] == result
+        assert status._order == 2
 
-    def test_collect_results(self):
-        """Test collecting all results."""
+    def test_multiple_updates_ordered(self):
+        """Test multiple updates maintain order."""
         status = AisertStatus()
-        result1 = Result(True, "Success 1")
-        result2 = Result(False, "Error 2")
+        result1 = Result("Validator1", True, "Success 1")
+        result2 = Result("Validator2", False, "Error 2")
         
-        status.update("ContainsValidator", result1)
-        status.update("TokenValidator", result2)
+        status.update(result1)
+        status.update(result2)
         
-        collected = status.collect()
-        assert len(collected) == 2
-        assert collected["ContainsValidator"] == result1
-        assert collected["TokenValidator"] == result2
+        assert len(status.validators) == 2
+        assert status.validators[1] == result1
+        assert status.validators[2] == result2
+        assert status._order == 3
 
-    def test_multiple_updates_same_validator(self):
-        """Test multiple updates to same validator overwrites."""
+    def test_same_validator_multiple_times(self):
+        """Test same validator can be added multiple times with different orders."""
         status = AisertStatus()
-        result1 = Result(True, "First")
-        result2 = Result(False, "Second")
+        result1 = Result("TestValidator", True, "First")
+        result2 = Result("TestValidator", False, "Second")
         
-        status.update("TokenValidator", result1)
-        status.update("TokenValidator", result2)
+        status.update(result1)
+        status.update(result2)
         
-        collected = status.collect()
-        assert len(collected) == 1
-        assert collected["TokenValidator"] == result2
+        assert len(status.validators) == 2
+        assert status.validators[1].reason == "First"
+        assert status.validators[2].reason == "Second"
 
 
 class TestAisertReport:
@@ -82,8 +80,8 @@ class TestAisertReport:
     def test_report_creation(self):
         """Test AisertReport creation."""
         rules = {
-            "Validator1": {"status": True, "reason": "Success"},
-            "Validator2": {"status": False, "reason": "Error"}
+            1: {"validator": "Validator1", "status": True, "reason": "Success"},
+            2: {"validator": "Validator2", "status": False, "reason": "Error"}
         }
         report = AisertReport(status=False, rules=rules)
         
