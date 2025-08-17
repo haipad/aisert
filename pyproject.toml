@@ -38,3 +38,6 @@ Issues = "https://github.com/haipad/aisert/issues"
 [build-system]
 requires = ["setuptools >= 77.0.3"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["aisert*", "examples*"]
