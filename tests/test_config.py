@@ -11,68 +11,90 @@ from aisert.config.defaults import DefaultConfig
 class TestAisertConfig:
     """Test AisertConfig functionality."""
 
-    def test_init_with_parameters(self):
-        """Test config initialization with parameters."""
+    def test_init_with_constructor(self):
+        """Test config initialization with constructor."""
         config = AisertConfig(
+            token_provider="openai",
             token_model="gpt-4",
-            model_provider="openai",
             token_encoding="cl100k_base",
-            sentence_transformer_model="all-MiniLM-L6-v2"
+            semantic_provider="sentence_transformers",
+            semantic_model="all-MiniLM-L6-v2"
         )
         assert config.token_model == "gpt-4"
-        assert config.model_provider == "openai"
+        assert config.token_provider == "openai"
         assert config.token_encoding == "cl100k_base"
-        assert config.sentence_transformer_model == "all-MiniLM-L6-v2"
+        assert config.semantic_model == "all-MiniLM-L6-v2"
 
     def test_get_default_config(self):
         """Test getting default configuration."""
         config = AisertConfig.get_default_config()
         assert config.token_model == "gpt-3.5-turbo"
-        assert config.model_provider == "openai"
-        assert config.sentence_transformer_model == "all-MiniLM-L6-v2"
+        assert config.token_provider == "openai"
+        assert config.semantic_model == "all-MiniLM-L6-v2"
 
-    def test_load_from_valid_file(self):
-        """Test loading config from valid JSON file."""
-        config_data = {
-            "token_model": "gpt-4",
-            "model_provider": "anthropic",
-            "token_encoding": None,
-            "sentence_transformer_model": "all-MiniLM-L6-v2"
-        }
-        
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            json.dump(config_data, f)
-            temp_path = f.name
-        
-        try:
-            config = AisertConfig.load(temp_path)
-            assert config.token_model == "gpt-4"
-            assert config.model_provider == "anthropic"
-        finally:
-            os.unlink(temp_path)
+    def test_constructor_with_all_params(self):
+        """Test constructor with all parameters."""
+        config = AisertConfig(
+            token_provider="anthropic",
+            token_model="claude-3",
+            semantic_provider="openai",
+            semantic_model="text-embedding-3-small"
+        )
+        assert config.token_provider == "anthropic"
+        assert config.token_model == "claude-3"
+        assert config.semantic_provider == "openai"
+        assert config.semantic_model == "text-embedding-3-small"
 
-    def test_load_from_nonexistent_file(self):
-        """Test loading config from nonexistent file returns default."""
-        config = AisertConfig.load("nonexistent.json")
-        assert config.token_model == "gpt-3.5-turbo"  # Default value
-
-    def test_load_from_invalid_json(self):
-        """Test loading config from invalid JSON returns default."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            f.write("invalid json content")
-            temp_path = f.name
+    def test_has_config_methods(self):
+        """Test has_*_config methods."""
+        config = AisertConfig()
+        assert not config.has_token_config()
+        assert not config.has_semantic_config()
         
-        try:
-            config = AisertConfig.load(temp_path)
-            assert config.token_model == "gpt-3.5-turbo"  # Default value
-        finally:
-            os.unlink(temp_path)
+        config.with_token("openai", "gpt-4")
+        assert config.has_token_config()
+        assert not config.has_semantic_config()
+        
+        config.with_semantic("sentence_transformers", "all-MiniLM-L6-v2")
+        assert config.has_token_config()
+        assert config.has_semantic_config()
+
+    def test_get_default_config_method(self):
+        """Test get_default_config method."""
+        config = AisertConfig.get_default_config()
+        assert config.has_token_config()
+        assert config.has_semantic_config()
+        assert config.token_model == "gpt-3.5-turbo"
+        assert config.semantic_model == "text-embedding-3-small"
+
+    def test_set_defaults_method(self):
+        """Test set_defaults method."""
+        # Set custom defaults
+        AisertConfig.set_defaults(
+            token_provider="anthropic",
+            token_model="claude-3",
+            semantic_provider="tfidf"
+        )
+        
+        # Get default config should use new defaults
+        config = AisertConfig.get_default_config()
+        assert config.token_provider == "anthropic"
+        assert config.token_model == "claude-3"
+        assert config.semantic_provider == "tfidf"
+        
+        # Reset to original defaults
+        AisertConfig.set_defaults(
+            token_provider="openai",
+            token_model="gpt-3.5-turbo",
+            semantic_provider="openai",
+            semantic_model="text-embedding-3-small"
+        )
 
     def test_repr(self):
         """Test string representation of config."""
-        config = AisertConfig(
-            token_model="gpt-4",
-            model_provider="openai"
+        config = (
+            AisertConfig()
+            .with_token("openai", "gpt-4")
         )
         repr_str = repr(config)
         assert "gpt-4" in repr_str
@@ -89,11 +111,11 @@ class TestDefaultConfig:
         assert "token_model" in config_dict
         assert "model_provider" in config_dict
         assert config_dict["token_model"] == "gpt-3.5-turbo"
-        assert config_dict["model_provider"] == "openai"
+        assert config_dict["token_provider"] == "openai"
 
     def test_default_values(self):
         """Test default configuration values."""
         assert DefaultConfig.token_model == "gpt-3.5-turbo"
-        assert DefaultConfig.model_provider == "openai"
-        assert DefaultConfig.sentence_transformer_model == "all-MiniLM-L6-v2"
+        assert DefaultConfig.token_provider == "openai"
+        assert DefaultConfig.semantic_model == "text-embedding-3-small"
         assert DefaultConfig.token_encoding is None

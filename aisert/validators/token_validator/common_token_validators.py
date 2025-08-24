@@ -14,7 +14,7 @@ class OpenAITokenValidator(TokenValidatorBase):
     _lock = threading.RLock()
 
     def __init__(self, token_model, token_encoding):
-        super().__init__(model_provider="openai")
+        super().__init__()
         self.token_model = token_model
         self.token_encoding = token_encoding
 
@@ -82,7 +82,7 @@ class HuggingFaceTokenValidator(TokenValidatorBase):
     _lock = threading.RLock()
 
     def __init__(self, token_model):
-        super().__init__(model_provider="huggingface")
+        super().__init__()
         self.token_model = token_model
 
     @classmethod
@@ -137,7 +137,7 @@ class AnthropicTokenValidator(TokenValidatorBase):
     _lock = threading.RLock()
 
     def __init__(self, token_model):
-        super().__init__(model_provider="anthropic")
+        super().__init__()
         self.token_model = token_model
 
     @classmethod
@@ -197,7 +197,7 @@ class GoogleTokenValidator(TokenValidatorBase):
     _lock = threading.RLock()
 
     def __init__(self, token_model):
-        super().__init__(model_provider="google")
+        super().__init__()
         self.token_model = token_model
 
     @classmethod

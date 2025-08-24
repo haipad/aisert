@@ -11,9 +11,8 @@ class ContainsValidator(BaseValidator):
     Validates if a text contains a specific substring.
     """
 
-    def __init__(self, invert=False):
+    def __init__(self):
         super().__init__(ValidatorEnums.CONTAINS)
-        self.invert = invert
 
     def validate(self, content, items: List) -> Result:
         """
@@ -27,15 +26,8 @@ class ContainsValidator(BaseValidator):
         for item in items:
             (found if item in content else missing).append(item)
 
-        if self.invert:
-            # For assert_not_contains: success when nothing is found
-
-            if found:
-                raise ContainsValidationError(f"Found flagged items: {found}")
-            reason = f"No flagged items found"
-        else:
-            # For assert_contains: success when nothing is missing
-            if missing:
-                raise ContainsValidationError(f"Following items not present in the content: {missing}")
-            reason = f"Found all items: {found}"
-        return Result(self.validator_name,True, reason)
+        # success when nothing is missing
+        if missing:
+            raise ContainsValidationError(f"Following items not present in the content: {missing}")
+        reason = f"Found all items: {found}"
+        return Result(self.validator_name, True, reason)

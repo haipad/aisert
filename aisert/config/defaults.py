@@ -1,19 +1,20 @@
-
-
 from typing import Dict
 
 
 class DefaultConfig:
     """
-    Default configuration for Aserti.i
+    Default configuration for Aisert
     This class holds the default settings for the Asert application.
     """
 
     # Default values for the configuration
     token_encoding: str = None
     token_model: str = "gpt-3.5-turbo"
-    model_provider: str = "openai"
-    sentence_transformer_model: str = "all-MiniLM-L6-v2"
+    token_provider: str = "openai"
+    semantic_provider: str = "openai"
+    semantic_model: str = "text-embedding-3-small"
+    
+
 
     @staticmethod
     def to_dict() -> Dict[str, str]:
@@ -24,6 +25,18 @@ class DefaultConfig:
         return {
             "token_encoding": DefaultConfig.token_encoding,
             "token_model": DefaultConfig.token_model,
-            "model_provider": DefaultConfig.model_provider,
-            "sentence_transformer_model": DefaultConfig.sentence_transformer_model,
+            "token_provider": DefaultConfig.token_provider,
+            "semantic_provider": DefaultConfig.semantic_provider,
+            "semantic_model": DefaultConfig.semantic_model,
         }
+
+    @staticmethod
+    def apply_all_defaults(config_class):
+        """Apply all default configurations."""
+        return config_class(
+            token_provider=DefaultConfig.token_provider,
+            token_model=DefaultConfig.token_model,
+            token_encoding=DefaultConfig.token_encoding,
+            semantic_provider=DefaultConfig.semantic_provider,
+            semantic_model=DefaultConfig.semantic_model
+        )

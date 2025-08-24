@@ -28,10 +28,7 @@ class TestAisert:
 
     def test_init_with_config(self):
         """Test Aisert initialization with custom config."""
-        config = AisertConfig(
-            token_model="gpt-4",
-            model_provider="openai"
-        )
+        config = AisertConfig(token_provider="openai", token_model="gpt-4")
         aisert = Aisert("test", config)
         assert aisert.config == config
 
@@ -155,7 +152,7 @@ class TestTokenValidation:
         mock_validator.count.return_value = 5
         mock_factory.return_value = mock_validator
         
-        config = AisertConfig(token_model="gpt-3.5-turbo", model_provider="openai")
+        config = AisertConfig(token_provider="openai", token_model="gpt-3.5-turbo")
         result = (
             Aisert("short text", config)
             .assert_tokens(10, strict=False)
@@ -170,7 +167,7 @@ class TestTokenValidation:
         mock_validator.count.return_value = 15
         mock_factory.return_value = mock_validator
         
-        config = AisertConfig(token_model="gpt-3.5-turbo", model_provider="openai")
+        config = AisertConfig(token_provider="openai", token_model="gpt-3.5-turbo")
         with pytest.raises(TokenValidationError):
             Aisert("long text", config).assert_tokens(10, strict=True)
 
@@ -181,7 +178,7 @@ class TestTokenValidation:
         mock_validator.count.return_value = 5
         mock_factory.return_value = mock_validator
         
-        config = AisertConfig(token_model="gpt-3.5-turbo", model_provider="openai")
+        config = AisertConfig(token_provider="openai", token_model="gpt-3.5-turbo")
         result = (
             Aisert({"key": "value"}, config)
             .assert_tokens(10, strict=False)
@@ -230,7 +227,7 @@ class TestChainedValidation:
         mock_validator.count.return_value = 5
         mock_factory.return_value = mock_validator
         
-        config = AisertConfig(token_model="gpt-3.5-turbo", model_provider="openai")
+        config = AisertConfig(token_provider="openai", token_model="gpt-3.5-turbo")
         result = (
             Aisert("Hello world", config)
             .assert_contains(["Hello"], strict=False)
@@ -250,7 +247,7 @@ class TestChainedValidation:
         mock_validator.count.return_value = 5
         mock_factory.return_value = mock_validator
         
-        config = AisertConfig(token_model="gpt-3.5-turbo", model_provider="openai")
+        config = AisertConfig(token_provider="openai", token_model="gpt-3.5-turbo")
         result = (
             Aisert("Hello world", config)
             .assert_contains(["missing"], strict=False)  # Fail

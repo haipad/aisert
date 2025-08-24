@@ -19,25 +19,12 @@ class TokenValidatorBase:
                 return len(text.split())  # Simple word count
     """
 
-    def __init__(self, model_provider: str = None):
+    def __init__(self):
         """
         Initialize base token validator.
-        
-        Args:
-            model_provider: Name of the AI provider ("openai", "anthropic", etc.)
         """
         super().__init__()
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.model_provider = model_provider
-
-    def get_model_provider(self) -> str:
-        """
-        Get the AI provider name for this token validator.
-        
-        Returns:
-            Provider name string (e.g., "openai", "anthropic")
-        """
-        return self.model_provider
 
     def _get_encoding(self):
         """
