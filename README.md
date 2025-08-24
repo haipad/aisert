@@ -148,5 +148,5 @@ MIT License
 ## Links
 
 - **[GitHub](https://github.com/haipad/aisert)** - Source code and issues
-- **[Documentation](https://aisert.readthedocs.io/)** - Complete documentation
+- **[Documentation](https://aisert.readthedocs.io/en/latest/)** - Complete documentation
 - **[PyPI](https://pypi.org/project/aisert/)** - Package repository
