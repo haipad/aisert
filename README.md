@@ -1,3 +1,9 @@
+[![Publish to PyPI](https://github.com/haipad/aisert/actions/workflows/workflow.yml/badge.svg)](https://github.com/haipad/aisert/actions/workflows/workflow.yml)
+[![PyPI version](https://badge.fury.io/py/aisert.svg)](https://badge.fury.io/py/aisert)
+[![Python versions](https://img.shields.io/pypi/pyversions/aisert.svg)](https://pypi.org/project/aisert/)
+[![License](https://img.shields.io/pypi/l/aisert.svg)](https://github.com/haipad/aisert/blob/main/LICENSE)
+[![Downloads](https://pepy.tech/badge/aisert)](https://pepy.tech/project/aisert)
+
 # Aisert 🚀
 
 Assert-style validation library for AI outputs - ensure your LLMs behave exactly as expected.
