@@ -44,6 +44,17 @@ autodoc_default_options = {
 add_function_parentheses = False
 add_module_names = False
 
+# Mock imports for optional dependencies
+autodoc_mock_imports = [
+    'tiktoken',
+    'anthropic', 
+    'transformers',
+    'sentence_transformers',
+    'torch',
+    'google.genai',
+    'huggingface_hub'
+]
+
 # Intersphinx mapping
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),

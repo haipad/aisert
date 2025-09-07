@@ -130,9 +130,9 @@ if not result.status:
 
 ## Documentation
 
-- **[📚 Examples](https://aisert.readthedocs.io/examples/)** - Configuration, usage patterns, production use cases
-- **[📖 API Reference](https://aisert.readthedocs.io/api/)** - Complete API documentation  
-- **[🔧 Custom Validators](https://aisert.readthedocs.io/examples/#custom-validators)** - Extend with your own validators
+- **[📚 Examples](https://aisert.readthedocs.io/en/latest/examples.html)** - Configuration, usage patterns, production use cases
+- **[📖 API Reference](https://aisert.readthedocs.io/en/latest/api.html)** - Complete API documentation  
+- **[🔧 Custom Validators](https://aisert.readthedocs.io/en/latest/examples.html#custom-validators)** - Extend with your own validators
 
 ## Requirements
 
@@ -148,5 +148,5 @@ MIT License
 ## Links
 
 - **[GitHub](https://github.com/haipad/aisert)** - Source code and issues
-- **[Documentation](https://aisert.readthedocs.io/)** - Complete documentation
+- **[Documentation](https://aisert.readthedocs.io/en/latest/)** - Complete documentation
 - **[PyPI](https://pypi.org/project/aisert/)** - Package repository
