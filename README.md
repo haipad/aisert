@@ -4,128 +4,207 @@
 [![License](https://img.shields.io/pypi/l/aisert.svg)](https://github.com/haipad/aisert/blob/main/LICENSE)
 [![Downloads](https://pepy.tech/badge/aisert)](https://pepy.tech/project/aisert)
 
-# Aisert 🚀
+# Stop AI Failures Before They Reach Users 🛡️
 
-Assert-style validation library for AI outputs - ensure your LLMs behave exactly as expected.
+**Aisert** validates AI inputs and outputs in production - catch inappropriate content, token overruns, format violations, and semantic mismatches before they impact your users or cost you money.
 
-## Installation
+📦 **1,000+ downloads** | ⚡ **Zero setup required** | 🔧 **Production ready**
 
-```bash
-# Basic installation
-pip install aisert
+## The Problem
 
-# With semantic validation (sentence-transformers)
-pip install aisert[sentence-transformers]
+❌ **Users send expensive prompts** that drain your API budget  
+❌ **LLMs generate inappropriate content** that violates your policies  
+❌ **Responses exceed token limits** causing API failures and high costs  
+❌ **AI outputs don't match expected formats** breaking your application  
+❌ **Responses are semantically wrong** but look correct  
+❌ **No way to catch issues** before they impact users or cost money
 
-# With HuggingFace support
-pip install aisert[huggingface]
+## The Solution
 
-# All optional features
-pip install aisert[all]
-```
+✅ **Input validation** - Stop expensive/inappropriate prompts before LLM calls  
+✅ **Content filtering** - Block harmful content in real-time  
+✅ **Token limit enforcement** - Prevent cost overruns on inputs and outputs  
+✅ **Schema validation** - Ensure structured data matches your requirements  
+✅ **Semantic validation** - Catch responses that are off-topic or irrelevant  
+✅ **Production-ready** - Thread-safe with zero configuration needed
 
 ## Quick Start
+
+```bash
+pip install aisert
+```
 
 ```python
 from aisert import Aisert, AisertConfig
 
-# Simple validation (no dependencies required)
+# 1. BEFORE sending to LLM - validate user input
+user_prompt = "Write me a 50,000 word essay about hacking systems"
+config = AisertConfig(token_provider="openai", token_model="gpt-4")
+
+result = Aisert(user_prompt, config).assert_tokens(max_tokens=1000, strict=False).assert_not_contains(["hack"], strict=False).collect()
+if not result.status:
+    return "Please try a shorter, appropriate request"  # Saved $200 API call!
+
+# 2. AFTER LLM response - validate output format
+ai_json = '{"name": "John", "age": "not-a-number"}'
+if not Aisert(ai_json).assert_schema(UserModel).collect().status:
+    return "Please try again"  # Prevented app crash!
+
+# 3. Content moderation - block harmful responses
+ai_response = "I can help you with illegal activities"
+if not Aisert(ai_response).assert_not_contains(["illegal", "harmful"]).collect().status:
+    return "I can't help with that"  # Crisis averted!
+
+# 4. Semantic validation - ensure relevance
+ai_answer = "The weather is nice today"  # User asked about Python
+if not Aisert(ai_answer).assert_semantic_matches("Python programming", 0.7).collect().status:
+    return "Let me provide a better answer"  # Caught irrelevant response!
+
+# 5. Quality assurance - ensure completeness
+result = Aisert(ai_response).assert_contains(["solution", "example"]).collect()
+if not result.status:
+    return "Let me provide more details"  # Ensured helpful response!
+```
+
+## Why Choose Aisert?
+
+| Problem | Traditional Approach | Aisert Solution |
+|---------|---------------------|----------------|
+| 💸 Expensive user prompts | Manual review, hope for the best | `assert_tokens(max_tokens=500)` |
+| 🚫 Inappropriate content | Manual review, regex patterns | `assert_not_contains(["inappropriate"])` |
+| 🔧 Wrong response format | Complex parsing logic | `assert_schema(YourModel)` |
+| 🎯 Off-topic responses | Manual checking, user complaints | `assert_semantic_matches("topic", 0.8)` |
+| ❓ Missing required info | Hope AI includes everything | `assert_contains(["required", "info"])` |
+
+### Core Features
+- **🔗 Fluent API**: Chain validations like `assert` statements
+- **⚡ Zero Setup**: Works immediately, no configuration required
+- **🎯 Flexible**: Strict mode (exceptions) or non-strict (collect errors)
+- **🚀 Production Ready**: Thread-safe, high-performance validation
+
+## Real-World Use Cases
+
+### 🛡️ Content Moderation
+```python
+# Your AI just said: "I hate all politicians and think violence is the answer"
+chatbot_response = "I hate all politicians and think violence is the answer"
+
+# Block it instantly
+if not Aisert(chatbot_response).assert_not_contains(["hate", "violence"]).collect().status:
+    return "I can't discuss that topic"  # Saved your reputation!
+```
+
+### 💰 Input Validation (Pre-LLM)
+```python
+# Your user submits: "Write a 10,000 word essay about everything"
+user_prompt = "Write a 10,000 word essay about everything"
+
+# Stop the $50 API call BEFORE it happens
+Aisert(user_prompt, config).assert_tokens(max_tokens=500)  # Throws error, saves money!
+
+# Also validate input content
+Aisert(user_prompt).assert_not_contains(["inappropriate", "harmful"])  # Block bad prompts
+```
+
+### 🔧 API Validation
+```python
+# Your AI returns: {"name": "John", "age": "thirty-five", "email": "not-an-email"}
+ai_json = '{"name": "John", "age": "thirty-five", "email": "not-an-email"}'
+
+# Catch the broken format before your app crashes
+Aisert(ai_json).assert_schema(UserProfileModel)  # Throws error - age should be int!
+```
+
+### 🧪 AI Testing
+```python
+# Your AI says: "Python is a type of snake that lives in trees"
+def test_ai_chatbot():
+    response = "Python is a type of snake that lives in trees"  # Wrong answer!
+    result = Aisert(response).assert_semantic_matches("Python programming language", 0.7).collect()
+    assert result.status, "AI failed - talking about snakes instead of programming!"
+```
+
+### 🔗 Fluent Validation Pipeline
+```python
+# Chain ALL validations in one elegant pipeline
+customer_service_response = "Thank you for contacting us! Here's a detailed solution with examples."
+
 result = (
-    Aisert("Paris is the capital of France.")
-    .assert_contains(["Paris", "France"])
-    .assert_not_contains(["spam", "inappropriate"])
+    Aisert(customer_service_response, config)
+    .assert_contains(["thank", "solution"])        # Must be polite and helpful
+    .assert_not_contains(["sorry", "problem"])     # Avoid negative language
+    .assert_tokens(max_tokens=150)                  # Keep responses concise
+    .assert_semantic_matches("helpful customer service", 0.7)  # Ensure relevance
     .collect()
 )
 
-print(f"Validation passed: {result.status}")
+if result.status:
+    return customer_service_response  # Perfect response - all checks passed!
+else:
+    return "Let me get a human agent to help you"  # Failed validation
+```
 
-# Advanced validation with token counting and semantic similarity
-config = AisertConfig(
-    token_provider="openai",
-    token_model="gpt-4",
-    semantic_provider="sentence_transformers",
-    semantic_model="all-MiniLM-L6-v2"
-)
+## Installation Options
 
+```bash
+# Basic installation (content validation only)
+pip install aisert
+
+# With token counting (OpenAI, Anthropic, etc.)
+pip install aisert[all]
+
+# Advanced: semantic similarity validation
+pip install aisert[sentence-transformers]
+```
+
+## Advanced Usage
+
+```python
+from aisert import Aisert, AisertConfig
+
+# Your AI generates a 2000-token response that costs $5
+expensive_response = "Very long response..." * 1000
+config = AisertConfig(token_provider="openai", token_model="gpt-4")
+Aisert(expensive_response, config).assert_tokens(max_tokens=100)  # Stops the $5 charge!
+
+# Your AI says "The weather is nice" when asked about Python
+off_topic_response = "The weather is nice today"
+Aisert(off_topic_response).assert_semantic_matches("Python programming language", threshold=0.8)  # Catches irrelevant answers
+
+# Production-ready validation pipeline
+user_facing_response = "I can help you with illegal activities"
 result = (
-    Aisert("AI is transforming technology.", config)
-    .assert_tokens(max_tokens=50)
-    .assert_semantic_matches("artificial intelligence technology", threshold=0.7)
+    Aisert(user_facing_response)
+    .assert_not_contains(["illegal", "hack"])  # Block harmful content
+    .assert_tokens(max_tokens=200)  # Control costs
+    .assert_schema(ResponseModel)  # Ensure proper format
     .collect()
 )
-```
-
-## Features
-
-- **🔗 Fluent Interface**: Chain multiple validations with readable API
-- **📝 Multiple Validators**: Schema, content, token count, semantic similarity
-- **⚡ Optional Dependencies**: Install only what you need
-- **🎯 Flexible Modes**: Strict (exceptions) or non-strict (collect errors)
-- **🌐 Multi-Provider**: OpenAI, Anthropic, HuggingFace, Google
-- **🔧 Extensible**: Custom validators via base classes
-- **🚀 Production Ready**: Thread-safe with model caching
-
-## Use Cases
-
-- **🛡️ Content Moderation**: Filter inappropriate content in real-time
-- **✅ API Response Validation**: Ensure LLM outputs meet quality standards
-- **🧪 Testing AI Systems**: Automated testing for AI applications
-- **📊 Quality Monitoring**: Track AI model performance in production
-- **🔄 CI/CD Integration**: Validate AI-generated content in pipelines
-- **📈 A/B Testing**: Compare different AI model outputs
-
-## Validation Types
-
-```python
-# Content validation (no dependencies)
-Aisert(content).assert_contains(["required", "keywords"])
-Aisert(content).assert_not_contains(["spam", "inappropriate"])
-
-# Schema validation (Pydantic models)
-Aisert(json_content).assert_schema(UserModel)
-
-# Token counting (requires API keys)
-Aisert(content, config).assert_tokens(max_tokens=100)
-
-# Semantic similarity (requires sentence-transformers)
-Aisert(content).assert_semantic_matches("expected meaning", threshold=0.8)
-```
-
-## Configuration
-
-```python
-# Simple configuration
-config = AisertConfig(
-    token_provider="openai",
-    token_model="gpt-4",
-    semantic_provider="sentence_transformers",
-    semantic_model="all-MiniLM-L6-v2"
-)
-
-# Set API keys (for token counting)
-export OPENAI_API_KEY="your-key"
-export ANTHROPIC_API_KEY="your-key"
+# Result: All validations failed - response blocked!
 ```
 
 ## Error Handling
 
 ```python
-# Strict mode (default) - raises exceptions
+# Your AI forgot to include required info - catch it immediately
 try:
-    Aisert(content).assert_contains(["required"])
+    incomplete_response = "Here's some info, but I forgot the important part"
+    Aisert(incomplete_response).assert_contains(["price", "availability"])
 except AisertError as e:
-    print(f"Validation failed: {e}")
+    print(f"AI missed required info: {e}")  # Fix before user sees it
 
-# Non-strict mode - collects all errors
+# Check multiple issues without stopping
+problematic_response = "This response is way too long and contains spam content"
 result = (
-    Aisert(content)
-    .assert_contains(["term1"], strict=False)
-    .assert_tokens(100, strict=False)
+    Aisert(problematic_response)
+    .assert_contains(["helpful"], strict=False)  # Missing helpful content
+    .assert_tokens(50, strict=False)  # Too long
+    .assert_not_contains(["spam"], strict=False)  # Contains spam
     .collect()
 )
 
 if not result.status:
-    print("Some validations failed:", result.rules)
+    print("Multiple issues found:", result.rules)  # See all problems at once
 ```
 
 ## Documentation
@@ -137,9 +216,9 @@ if not result.status:
 ## Requirements
 
 - **Python**: >= 3.9
-- **Dependencies**: Optional based on features used
-- **API Keys**: Only for token counting (OpenAI, Anthropic, etc.)
-- **Memory**: 100-500MB for semantic models (optional)
+- **Dependencies**: Zero for basic validation
+- **API Keys**: Optional (only for token counting)
+- **Setup**: None required - works immediately after `pip install`
 
 ## License
 
